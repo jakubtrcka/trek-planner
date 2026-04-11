@@ -775,7 +775,7 @@ async function extractChallengeCardsWithLog(
 ): Promise<BasicChallengeCard[]> {
   const result = await page.evaluate((baseUrl) => {
     const normalize = (value: string) => value.replace(/\s+/g, " ").trim();
-    const rows: Array<{ id: string; name: string; url: string }> = [];
+    const rows: Array<{ id: string; name: string; url: string; category?: string; activeFrom?: string; activeTo?: string }> = [];
     const seen = new Set<string>();
     let skippedAfterEnded = 0;
 
