@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(16, 185, 129, 0.14), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.12), transparent 25%),
+    #f5f7fa;
+  color: #0f172a;
+  font-family:
+    "IBM Plex Sans",
+    "Segoe UI",
+    sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.leaflet-container {
+  background: #e5edf3;
+  font-family:
+    "IBM Plex Sans",
+    "Segoe UI",
+    sans-serif;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+}
+
+.app-map {
+  width: 100%;
+  min-height: 360px;
+  height: 100%;
+}
+
+.app-map.is-hidden {
+  display: none;
+}
+
+.letter-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid #d4d4d8;
+  background: #fff;
+  color: #3f3f46;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  position: relative;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.letter-pill:hover {
+  border-color: #22c55e;
+  transform: translateY(-1px);
+}
+
+.letter-pill input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.letter-pill span {
+  padding: 0.45rem 0.7rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.letter-pill.is-active {
+  background: #ecfdf5;
+  border-color: var(--letter-color, #16a34a);
+  color: var(--letter-color, #166534);
+  box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.2);
+}
+
+.map-attribution a {
+  color: #0f766e;
+}

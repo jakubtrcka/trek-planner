@@ -1,0 +1,496 @@
+{
+  "createdAt": "2026-02-28T08:53:10.669Z",
+  "targetUrl": "https://cs.hory.app/country/czech-republic",
+  "finalUrl": "https://cs.hory.app/country/czech-republic",
+  "pageTitle": "Česká republika 🇨🇿 | Horobraní",
+  "mapFound": true,
+  "counters": {
+    "totalResponses": 102,
+    "filteredNetwork": 44,
+    "jsonLike": 3,
+    "tileLike": 8,
+    "scriptInsights": 16
+  },
+  "filteredNetwork": [
+    {
+      "url": "https://t.hory.app/t.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/forms-Bqaw7M8p.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/_commonjsHelpers-CqkleIqs.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/index-C0Zqfgkc.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/functions-BPSf9pKH.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://t.hory.app/api/t",
+      "status": 200,
+      "method": "POST",
+      "resourceType": "fetch",
+      "contentType": "application/json"
+    },
+    {
+      "url": "https://t.hory.app/t.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://cs.hory.app/icons/map/mountain-visited-80.png",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "image",
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://cs.hory.app/assets/appDashboardDefault-BiR7L9e9.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/main-qXhbji5b.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/index-C0Zqfgkc.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/functions-BPSf9pKH.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/_commonjsHelpers-CqkleIqs.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/modal-BCZ4BSJ_.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/gallery-Lk726Wa8.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://t.hory.app/api/t",
+      "status": 200,
+      "method": "POST",
+      "resourceType": "fetch",
+      "contentType": "application/json"
+    },
+    {
+      "url": "https://t.hory.app/t.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/main-qXhbji5b.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/index-C0Zqfgkc.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/functions-BPSf9pKH.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/modal-BCZ4BSJ_.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/_commonjsHelpers-CqkleIqs.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/icons/mountain-rescue.png",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "image",
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://cs.hory.app/mountain-photos/1/6183-052c8b20f2fc08053526879b574ca289cbf1a364.jpg",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "image",
+      "contentType": "image/jpeg"
+    },
+    {
+      "url": "https://cs.hory.app/icons/map/mountain-forbidden-80.png",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "image",
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://cs.hory.app/icons/map/mountain-deleted-80.png",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "image",
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://cs.hory.app/icons/map/mountain-ok-80.png",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "image",
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://cs.hory.app/icons/map/mountain-warning-80.png",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "image",
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://cs.hory.app/icons/map/mountain-danger-80.png",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "image",
+      "contentType": "image/png"
+    },
+    {
+      "url": "https://cs.hory.app/assets/appCountryDetail-BqUHUXX-.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/gallery-Lk726Wa8.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/map.controls-BeUZ3NJM.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/map.service-CyCfnbTF.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/leaflet-src-C9gjC7Le.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cs.hory.app/assets/maplibre-gl-okpb1bmT.js",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://api.mapriot.com/styles/outdoor/raster/6/33/21?apiKey=09JadAfF9779a5asfQ_r30FAA3mJkasfouQxVdf66",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "image",
+      "contentType": "image/jpeg"
+    },
+    {
+      "url": "https://api.mapriot.com/styles/outdoor/raster/6/35/21?apiKey=09JadAfF9779a5asfQ_r30FAA3mJkasfouQxVdf66",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "image",
+      "contentType": "image/jpeg"
+    },
+    {
+      "url": "https://api.mapriot.com/styles/outdoor/raster/6/35/22?apiKey=09JadAfF9779a5asfQ_r30FAA3mJkasfouQxVdf66",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "image",
+      "contentType": "image/jpeg"
+    },
+    {
+      "url": "https://api.mapriot.com/styles/outdoor/raster/6/36/21?apiKey=09JadAfF9779a5asfQ_r30FAA3mJkasfouQxVdf66",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "image",
+      "contentType": "image/jpeg"
+    },
+    {
+      "url": "https://api.mapriot.com/styles/outdoor/raster/6/34/22?apiKey=09JadAfF9779a5asfQ_r30FAA3mJkasfouQxVdf66",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "image",
+      "contentType": "image/jpeg"
+    },
+    {
+      "url": "https://api.mapriot.com/styles/outdoor/raster/6/34/21?apiKey=09JadAfF9779a5asfQ_r30FAA3mJkasfouQxVdf66",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "image",
+      "contentType": "image/jpeg"
+    },
+    {
+      "url": "https://api.mapriot.com/styles/outdoor/raster/6/36/22?apiKey=09JadAfF9779a5asfQ_r30FAA3mJkasfouQxVdf66",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "image",
+      "contentType": "image/jpeg"
+    },
+    {
+      "url": "https://api.mapriot.com/styles/outdoor/raster/6/33/22?apiKey=09JadAfF9779a5asfQ_r30FAA3mJkasfouQxVdf66",
+      "status": 200,
+      "method": "GET",
+      "resourceType": "image",
+      "contentType": "image/jpeg"
+    },
+    {
+      "url": "https://t.hory.app/api/t",
+      "status": 200,
+      "method": "POST",
+      "resourceType": "fetch",
+      "contentType": "application/json"
+    }
+  ],
+  "scriptInsights": [
+    {
+      "url": "https://t.hory.app/t.js",
+      "absoluteUrls": [],
+      "apiPaths": [
+        "/api/t"
+      ],
+      "geoKeywords": []
+    },
+    {
+      "url": "https://cs.hory.app/assets/index-C0Zqfgkc.js",
+      "absoluteUrls": [
+        "http://localhost"
+      ],
+      "apiPaths": [],
+      "geoKeywords": []
+    },
+    {
+      "url": "https://cs.hory.app/assets/functions-BPSf9pKH.js",
+      "absoluteUrls": [
+        "https://www.chartjs.org",
+        "https://github.com/kurkle/color#readme",
+        "https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md"
+      ],
+      "apiPaths": [],
+      "geoKeywords": []
+    },
+    {
+      "url": "https://t.hory.app/t.js",
+      "absoluteUrls": [],
+      "apiPaths": [
+        "/api/t"
+      ],
+      "geoKeywords": []
+    },
+    {
+      "url": "https://cs.hory.app/assets/main-qXhbji5b.js",
+      "absoluteUrls": [
+        "https://cdn.jsdelivr.net/npm/country-flag-emoji-polyfill@0.1/dist/TwemojiCountryFlags.woff2"
+      ],
+      "apiPaths": [],
+      "geoKeywords": []
+    },
+    {
+      "url": "https://cs.hory.app/assets/index-C0Zqfgkc.js",
+      "absoluteUrls": [
+        "http://localhost"
+      ],
+      "apiPaths": [],
+      "geoKeywords": []
+    },
+    {
+      "url": "https://cs.hory.app/assets/functions-BPSf9pKH.js",
+      "absoluteUrls": [
+        "https://www.chartjs.org",
+        "https://github.com/kurkle/color#readme",
+        "https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md"
+      ],
+      "apiPaths": [],
+      "geoKeywords": []
+    },
+    {
+      "url": "https://t.hory.app/t.js",
+      "absoluteUrls": [],
+      "apiPaths": [
+        "/api/t"
+      ],
+      "geoKeywords": []
+    },
+    {
+      "url": "https://cs.hory.app/assets/main-qXhbji5b.js",
+      "absoluteUrls": [
+        "https://cdn.jsdelivr.net/npm/country-flag-emoji-polyfill@0.1/dist/TwemojiCountryFlags.woff2"
+      ],
+      "apiPaths": [],
+      "geoKeywords": []
+    },
+    {
+      "url": "https://cs.hory.app/assets/index-C0Zqfgkc.js",
+      "absoluteUrls": [
+        "http://localhost"
+      ],
+      "apiPaths": [],
+      "geoKeywords": []
+    },
+    {
+      "url": "https://cs.hory.app/assets/functions-BPSf9pKH.js",
+      "absoluteUrls": [
+        "https://www.chartjs.org",
+        "https://github.com/kurkle/color#readme",
+        "https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md"
+      ],
+      "apiPaths": [],
+      "geoKeywords": []
+    },
+    {
+      "url": "https://cs.hory.app/assets/appCountryDetail-BqUHUXX-.js",
+      "absoluteUrls": [],
+      "apiPaths": [],
+      "geoKeywords": [
+        "leaflet",
+        "maplibre",
+        "geojson",
+        "feature",
+        "marker"
+      ]
+    },
+    {
+      "url": "https://cs.hory.app/assets/map.controls-BeUZ3NJM.js",
+      "absoluteUrls": [],
+      "apiPaths": [],
+      "geoKeywords": [
+        "leaflet"
+      ]
+    },
+    {
+      "url": "https://cs.hory.app/assets/map.service-CyCfnbTF.js",
+      "absoluteUrls": [
+        "https://api.mapriot.com/styles/outdoor.json",
+        "https://mapriot.com/copyright",
+        "https://openstreetmap.org/copyright",
+        "https://api.mapriot.com",
+        "https://api.mapriot.com/styles/outdoor/raster/{z}/{x}/{y}?apiKey=",
+        "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+        "https://opentopomap.org",
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      ],
+      "apiPaths": [],
+      "geoKeywords": [
+        "leaflet",
+        "maplibre",
+        "marker",
+        "geojson"
+      ]
+    },
+    {
+      "url": "https://cs.hory.app/assets/leaflet-src-C9gjC7Le.js",
+      "absoluteUrls": [
+        "https://leafletjs.com",
+        "http://www.w3.org/2000/svg"
+      ],
+      "apiPaths": [],
+      "geoKeywords": [
+        "leaflet",
+        "bbox",
+        "marker",
+        "feature",
+        "featurecollection",
+        "geojson"
+      ]
+    },
+    {
+      "url": "https://cs.hory.app/assets/maplibre-gl-okpb1bmT.js",
+      "absoluteUrls": [
+        "https://github.com/mapbox/mapbox-gl-js/issues/2907",
+        "https://maplibre.org/",
+        "http://www.w3.org/2000/svg"
+      ],
+      "apiPaths": [],
+      "geoKeywords": [
+        "geojson",
+        "feature",
+        "featurecollection",
+        "bbox",
+        "vector tile",
+        "vectortile",
+        "tilejson",
+        "maplibre",
+        "marker"
+      ]
+    }
+  ]
+}
