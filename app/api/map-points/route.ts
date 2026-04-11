@@ -644,12 +644,65 @@ function createRunLogger(prefix: string) {
   };
 }
 
+// Substitution table for Czech diacritics - preserves Czech-specific letters
+const CZECH_SUBSTITUTION_TABLE: Record<string, string> = {
+  // A variants
+  "A": "A", "Á": "A", "À": "A", "Â": "A", "Ã": "A", "Ä": "A", "Å": "A", "Æ": "A",
+  // B
+  "B": "B",
+  // C
+  "C": "C", "Č": "Č",
+  // D
+  "D": "D", "Ď": "Ď",
+  // E variants
+  "E": "E", "É": "E", "È": "E", "Ê": "E", "Ë": "E", "Ě": "Ě",
+  // F
+  "F": "F",
+  // G
+  "G": "G",
+  // H
+  "H": "H",
+  // I variants
+  "I": "I", "Í": "I", "Ì": "I", "Î": "I", "Ï": "I",
+  // J
+  "J": "J",
+  // K
+  "K": "K",
+  // L
+  "L": "L",
+  // M
+  "M": "M",
+  // N
+  "N": "N", "Ň": "Ň", "Ñ": "N",
+  // O variants
+  "O": "O", "Ó": "O", "Ò": "O", "Ô": "O", "Õ": "O", "Ö": "O",
+  // P
+  "P": "P",
+  // Q
+  "Q": "Q",
+  // R
+  "R": "R", "Ř": "Ř",
+  // S
+  "S": "S", "Š": "Š",
+  // T
+  "T": "T", "Ť": "Ť",
+  // U variants
+  "U": "U", "Ú": "U", "Ù": "U", "Û": "U", "Ü": "U", "Ů": "Ů",
+  // V
+  "V": "V",
+  // W
+  "W": "W",
+  // X
+  "X": "X",
+  // Y variants
+  "Y": "Y", "Ý": "Y", "Ÿ": "Y",
+  // Z
+  "Z": "Z", "Ž": "Ž"
+};
+
 function normalizeLetter(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toUpperCase()
-    .slice(0, 1);
+  const upper = value.toUpperCase().slice(0, 1);
+  return CZECH_SUBSTITUTION_TABLE[upper] || upper;
 }
 
 function firstLetterFromName(value: string): string | null {
