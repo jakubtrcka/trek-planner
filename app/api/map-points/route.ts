@@ -644,59 +644,33 @@ function createRunLogger(prefix: string) {
   };
 }
 
-// Substitution table for Czech diacritics - preserves Czech-specific letters
+// Substitution table for Czech alphabet - vowels with čárka map to base, háček consonants stay separate
 const CZECH_SUBSTITUTION_TABLE: Record<string, string> = {
-  // A variants
-  "A": "A", "Á": "A", "À": "A", "Â": "A", "Ã": "A", "Ä": "A", "Å": "A", "Æ": "A",
-  // B
+  "A": "A", "Á": "A",
   "B": "B",
-  // C
   "C": "C", "Č": "Č",
-  // D
   "D": "D", "Ď": "Ď",
-  // E variants
-  "E": "E", "É": "E", "È": "E", "Ê": "E", "Ë": "E", "Ě": "Ě",
-  // F
+  "E": "E", "É": "E", "Ě": "E",
   "F": "F",
-  // G
   "G": "G",
-  // H
   "H": "H",
-  // I variants
-  "I": "I", "Í": "I", "Ì": "I", "Î": "I", "Ï": "I",
-  // J
+  "I": "I", "Í": "I",
   "J": "J",
-  // K
   "K": "K",
-  // L
   "L": "L",
-  // M
   "M": "M",
-  // N
-  "N": "N", "Ň": "Ň", "Ñ": "N",
-  // O variants
-  "O": "O", "Ó": "O", "Ò": "O", "Ô": "O", "Õ": "O", "Ö": "O",
-  // P
+  "N": "N", "Ň": "Ň",
+  "O": "O", "Ó": "O",
   "P": "P",
-  // Q
   "Q": "Q",
-  // R
   "R": "R", "Ř": "Ř",
-  // S
   "S": "S", "Š": "Š",
-  // T
   "T": "T", "Ť": "Ť",
-  // U variants
-  "U": "U", "Ú": "U", "Ù": "U", "Û": "U", "Ü": "U", "Ů": "Ů",
-  // V
+  "U": "U", "Ú": "U", "Ů": "U",
   "V": "V",
-  // W
   "W": "W",
-  // X
   "X": "X",
-  // Y variants
-  "Y": "Y", "Ý": "Y", "Ÿ": "Y",
-  // Z
+  "Y": "Y", "Ý": "Y",
   "Z": "Z", "Ž": "Ž"
 };
 

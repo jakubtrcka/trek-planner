@@ -258,12 +258,38 @@ const SELECTED_LETTER_COLORS = [
   "#3949ab"
 ];
 
+const CZECH_SUBSTITUTION_TABLE_CLIENT: Record<string, string> = {
+  "A": "A", "Á": "A",
+  "B": "B",
+  "C": "C", "Č": "Č",
+  "D": "D", "Ď": "Ď",
+  "E": "E", "É": "E", "Ě": "E",
+  "F": "F",
+  "G": "G",
+  "H": "H",
+  "I": "I", "Í": "I",
+  "J": "J",
+  "K": "K",
+  "L": "L",
+  "M": "M",
+  "N": "N", "Ň": "Ň",
+  "O": "O", "Ó": "O",
+  "P": "P",
+  "Q": "Q",
+  "R": "R", "Ř": "Ř",
+  "S": "S", "Š": "Š",
+  "T": "T", "Ť": "Ť",
+  "U": "U", "Ú": "U", "Ů": "U",
+  "V": "V",
+  "W": "W",
+  "X": "X",
+  "Y": "Y", "Ý": "Y",
+  "Z": "Z", "Ž": "Ž"
+};
+
 function normalizeLetterClient(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toUpperCase()
-    .slice(0, 1);
+  const upper = value.toUpperCase().slice(0, 1);
+  return CZECH_SUBSTITUTION_TABLE_CLIENT[upper] || upper;
 }
 
 function firstLetterFromNameClient(value: string): string | null {
