@@ -1,0 +1,41 @@
+# TEAM_STATE: Trek Planner (Hory)
+
+Tento soubor slouží jako sdílená paměť a inkubátor poznatků pro tento projekt. Globální standardy jsou uloženy v [[ai-docs/skills/clean-code|složce skills]].
+
+## Projektová specifika a dočasná řešení
+- **DB Start:** PostgreSQL@16 (Homebrew): `brew services start postgresql@16`.
+- **tsx a .env.local:** `npx tsx` nenačítá `.env.local` automaticky. Předávat explicitně: `DATABASE_URL=... npx tsx script.ts` (více v [[ai-docs/skills/database|Database Skill]]).
+- **Better Auth:** Ignorovat peer dependency warning u `better-call` ohledně Zod 4. **Neupgradovat Zod** bez schválení [[ai-docs/ARCHITECT|Architekta]].
+- **Drizzle Kit:** V tomto prostředí používat `drizzle-kit push --force` (viz [[ai-docs/skills/database|Database Skill - Migrace]]).
+- **Better Auth schéma:** Tabulka se jmenuje `"user"` (singular) — Better Auth konvence. Drizzle proměnná `users` mapuje na DB tabulku `"user"`. `users.id` je `text`, ne `serial` — všechny FK na users jsou `text`.
+
+## Technický dluh (čeká na Architekta)
+
+*(prázdné — žádný aktivní TD)*
+
+## Návrhy na úpravu Skills (Inkubátor)
+- `detail.ts` výjimka ze souborových limitů (244 ř.): `page.evaluate()` blok nelze rozdělit přes hranice souborů — akceptováno jako trvalá výjimka (Verze 20). Zvážit extrakci do dedikovaného browser-script souboru při dalším rozšiřování.
+- **TD-23a (čeká na Architekta):** Limit hooks 25 ř. neodpovídá realitě kompoziční hooks. Navrhovaná změna v `ai-docs/skills/clean-code.md`: state/getter hooks ≤25 ř., kompoziční hooks (více useEffect nebo async operací) ≤120 ř. s odůvodněním v RELEASE_NOTES. Zaznamenáno v TODO_NEXT.md Priorita 23.
+
+## Aktuální stav datových toků (od Verze 25a / v8.6.1, aktualizováno v10)
+- **Vrcholy (peaks):** Playwright scrape → `POST /api/sync-peaks` → DB upsert → `GET /api/peaks`. Bez file cache. `/api/map-points` odstraněn (TD-24b).
+- **Výzvy (challenges):** `data/points-cache/all-challenges.json` stále aktivní (file cache zachována).
+- **Uživatelské výstupy (od Verze 26a / v8.7):** `useUserAscents` používá SWR conditional fetching — klíč `session ? "/api/user-ascents" : null`. Nepřihlášený uživatel endpoint nevolá. Po explicitním přihlášení `onLoginSuccess` callback volá `loadUserAscents(true)` (POST `/api/user-ascents` se `refresh=true` → spustí hory.app scrape pomocí uložených credentials). SWR `useEffect` záměrně nevyužit (spouštěl by se i při session restore z cookie).
+- **User credentials (od Verze v8.5):** `useHoryCredentials` fetchuje `GET /api/user/settings?moduleSlug=mountains` na mount (jen přihlášení). Uložení přes `POST /api/user/settings`. Šifrování AES-256-GCM v `lib/crypto.ts`, klíč z `SETTINGS_ENCRYPTION_KEY` (.env.local, 32 znaků).
+- **Admin přístup (od Verze v8.6):** Email allowlist via `ADMIN_EMAILS` env (comma-separated). DB schéma neobsahuje `role` pole.
+- **Oblasti (od TD-schema-uc + Fáze 9.4, linkování od v9.5, UI filtr od v9.6):** `areas` + `location_areas` tabulky v schema. `lib/db/areas-repository.ts` (`getAreas`, `upsertArea`, `linkLocationToArea`, `unlinkAllAreasFromLocation`, `linkLocationBySlug`). `lib/db/locations-area-repository.ts` (`getLocationsByArea`, `getLocationAreaSlugsMap`). `POST /api/sync-areas` (admin-only). `GET /api/areas` (veřejné). `GET /api/peaks` obohacen o `areaSlugs: string[]` per lokaci. `POST /api/sync-peaks` po upsert peaků volá `linkLocationBySlug` pro každý peak se slugem extrahovaným z URL rangu (`slugFromSource()`). Tlačítko "Sync Oblasti" aktivováno v `AdminPanel.tsx`. `areas` má UNIQUE INDEX na `(moduleId, slug)`. `location_areas` má UNIQUE INDEX na `(locationId, areaId)`. `user_challenges` má UNIQUE INDEX na `(userId, challengeId)` — `upsertUserChallenge` přepsán na `onConflictDoUpdate`. Client-side filtr v `app/page.tsx` (`selectedAreaSlugs` state, `areaFilteredPoints` useMemo, OR logika). `PeaksSidebar.tsx` renderuje checkboxy oblastí jen pokud `dbAreas.length > 0`. `hooks/useAreas.ts` — čistý getter (SWR, bez write operací).
+- **Modules seed (povinný krok po DB reset):** Tabulka `modules` musí obsahovat řádek `('mountains', 'Hory', 'mountain')`. Bez něj vrací `POST /api/user/settings` 404 a credentials se neperzistují. Seed: `INSERT INTO modules (slug, name, icon) VALUES ('mountains', 'Hory', 'mountain') ON CONFLICT (slug) DO NOTHING;`
+- **Check-in + Visit stats (od v9.1/v9.2):** `POST /api/user-visits` (upsert) + `DELETE /api/user-visits/[locationId]` + `GET /api/user-visits`. Repo odděleno: `visits-repository.ts` (scrape-sync read + `getUserVisits`) vs. `visits-checkin-repository.ts` (user write). `useUserVisits` hook — čistý getter (SWR conditional). `handleVisitChange` v `page.tsx` volá `Promise.all([mutateAscents(), mutateVisits()])`. `PeakDetail.tsx` zobrazuje počet check-inů z `userVisits` mapy + `isPending` UI state. Mutační pattern zachován: hooks jsou čisté gettery.
+- **User challenges progres (od TD-orphan+v9.3):** `GET /api/user/challenges` (auth-guard) → `getUserChallenges(userId)` → `useUserChallenges()` (SWR conditional). `completedChallengeIds: Set<number>` předáno do `ChallengesContent`. Badge "Splněno" (amber) pro výzvy s `completedAt != null`. Matching funguje pouze pro DB-sourced challenges (integer id) — výzvy z file-cache (string URL id) badge neukazují, expected behavior.
+- **Login scrape (přepsáno v9.4.4):** `providers/hory/HoryUserService.ts` přepsán vzorem fungujícího `HoryScraperService` — `fillFirstAvailable`, `submitLogin` s Enter fallbackem, `Promise.race([waitForURL, waitForLoadState])`. Bot-detection bypass z v9.3 odstraněn (nebyl potřeba). Button selektor: `button[type="submit"], input[type="submit"]` (diacritika v Playwright `hasText` filtrech selhávala). Debug: `/tmp/hory-before-submit.png`, `/tmp/hory-login-fail.png`.
+- **Dialog z-index (opraveno v8.6.1):** Map wrapper má `isolate` (vlastní stacking context). Dialog má `z-[1100]`. Tailwind OKLCH třídy v `dialog.tsx` nahrazeny standardními.
+- **Trips vizualizace + GPX + přejmenování + smazání + waypoint management (od v10, rozšířeno v11–v12):** `hooks/useTripLayer.ts` (57 ř.) spravuje Leaflet polyline + markery pro aktivní výlet. `PATCH /api/trips/[id]` (rename, ownership check). `GET /api/trips/[id]/export` (GPX, escapeXml helper). `DELETE /api/trips/[id]` (ownership guard, kaskádové smazání waypoints). `renameTrip(id, name)` + `deleteTrip(id)` v `hooks/useTrips.ts` (kompoziční hook, 38 ř., výjimka 120 ř.). UI: `Trash2` button s `confirmDeleteId` state — dvě-kliková konfirmace bez `window.confirm`. Inline přejmenování v `TripPanel.tsx` (dvojklik → Input, blur/Enter/Escape). `updateTrip`, `getTripById`, `deleteTrip` v `lib/db/trips-repository.ts` (54 ř., limit 60). **v12 — Waypoint management:** `lib/db/trips-waypoints-repository.ts` (28 ř.) — `deleteWaypoint` (ownership check, boolean return), `reorderWaypoints` (ownership check, existence validace, DB transaction pro atomický order update). `DELETE /api/trips/[id]/waypoints/[waypointId]`. `PATCH /api/trips/[id]/waypoints` (přijme `{ orderedIds: number[] }`). `hooks/useTripWaypoints.ts` (19 ř.) — getter hook `{ waypoints, refetch }`. `TripPanel.tsx` (158 ř.) — X tlačítko s `confirmWpDeleteId` inline confirm, ChevronUp/Down šipky (disabled pro první/poslední). `waypointStatus` string counter v `page.tsx` — trigger `useTripLayer` re-fetch po mutaci. Waypoints route: 65 ř. (výjimka 80 ř. — 3 handlers + 2 Zod schémata).
+
+## Uživatelské preference (Jakub)
+- Minimalismus v komunikaci ("Easy Mode").
+- Striktní typování bez `any` (viz [[ai-docs/skills/typescript|TypeScript Skill]]).
+- Komunikace agentů výhradně přes [[ai-docs/TODO_NEXT|TODO_NEXT]] a [[ai-docs/RELEASE_NOTES|RELEASE_NOTES]].
+
+## Historie upgradů
+- [2026-04-16] Přechod na modulární Skills systém a [[ai-docs/skills/clean-code|Obsidian Vault]].
+- [2026-04-15] Verze 12: Kompletní migrace DB modelu a integrace Better Auth 1.6.4 (viz [[ai-docs/PROJECT_CONTEXT|DB Model v kontextu]]).

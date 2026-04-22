@@ -1,0 +1,2 @@
+- [Trek Planner Agent Workflow](project_agent_workflow.md) — Architect/Coder/Scribe roles, communication files, Scribe's cleanup protocol
+- [Modules table seed requirement](project_modules_seed.md) — `modules` table must be seeded after DB reset; absence causes silent 404 on `POST /api/user/settings`

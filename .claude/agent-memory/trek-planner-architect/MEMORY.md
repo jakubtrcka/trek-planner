@@ -1,0 +1,2 @@
+- [Jakub — uživatelský profil](user_jakub.md) — minimalistická komunikace, striktní typování, agenti komunikují přes TODO_NEXT + RELEASE_NOTES
+- [Trek Planner — aktuální stav projektu](project_state.md) — Pivot 2026-04-22: multi-modulární platforma, v13 = Zámky, trips UX zmrazeno, AI-first plánování budoucnost

@@ -1,0 +1,4 @@
+- [Trek Planner Coder Workflow](project_coder_workflow.md) — File limits, CODER.md rules, doc workflow, and circular import solution for peaks.ts
+- [Admin Role Check Pattern](project_admin_role.md) — No DB role field; admin access uses ADMIN_EMAILS env var (comma-separated)
+- [Login Sync Trigger Pattern](project_login_sync_pattern.md) — onLoginSuccess callback chain (not useEffect), triggers ascents sync only on explicit login
+- [Area Filtering Pattern](project_area_filtering.md) — MapPoint.areaSlugs enrichment via /api/peaks, client-side useMemo filter in page.tsx, useAreas SWR hook

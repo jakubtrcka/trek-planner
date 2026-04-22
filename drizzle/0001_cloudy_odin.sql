@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "peaks_lat_lon_idx" ON "peaks" USING btree ("lat","lon");

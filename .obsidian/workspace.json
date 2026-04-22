@@ -1,0 +1,207 @@
+{
+  "main": {
+    "id": "50c1b60fa2835657",
+    "type": "split",
+    "children": [
+      {
+        "id": "5363c45fc3343fe1",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ce1c78603510d1a0",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "ai-docs/CODER.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "CODER"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "59a4eae9d74fc50f",
+    "type": "split",
+    "children": [
+      {
+        "id": "839f2e86824a63ab",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e20e78c3879c7a5e",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": true
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Průzkumník souborů"
+            }
+          },
+          {
+            "id": "076d9f3a20ad0404",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Hledat"
+            }
+          },
+          {
+            "id": "ad9a9d3093174eb4",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Záložky"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "275e88dcde4c3c22",
+    "type": "split",
+    "children": [
+      {
+        "id": "c22f2b30f6618667",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "1419ff03c519be59",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Zpětné odkazy"
+            }
+          },
+          {
+            "id": "f990a0f4de1c4531",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Odchozí odkazy"
+            }
+          },
+          {
+            "id": "3c5b1be2a31d1704",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Štítky"
+            }
+          },
+          {
+            "id": "ece67f852edf1b6c",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "Všechny vlastnosti"
+            }
+          },
+          {
+            "id": "cc43444632897a41",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Přehled"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Otevřít rychlé přepínání": false,
+      "graph:Otevřít graf": false,
+      "canvas:Vytvořit nový canvas": false,
+      "daily-notes:Otevřít dnešní poznámku": false,
+      "templates:Vložit šablonu": false,
+      "command-palette:Otevřít paletu příkazů": false,
+      "bases:Vytvořit novou základnu": false
+    }
+  },
+  "active": "ce1c78603510d1a0",
+  "lastOpenFiles": [
+    "export.geojson",
+    "hooks/useTripWaypoints.ts",
+    "app/api/trips/[id]/waypoints/[waypointId]/route.ts",
+    "app/api/trips/[id]/waypoints/[waypointId]",
+    "lib/db/trips-waypoints-repository.ts",
+    "app/api/trips/[id]/export/route.ts",
+    "app/api/trips/[id]/export",
+    "app/api/trips/[id]/route.ts",
+    "hooks/useTripLayer.ts",
+    "hooks/useAreas.ts",
+    "lib/db/locations-area-repository.ts",
+    "ai-docs/ARCHITECT.md",
+    "ai-docs/PROJECT_CONTEXT.md",
+    "ai-docs/CODER.md",
+    "ai-docs/SCRIBE.md",
+    "ai-docs/skills/scraping.md",
+    "README.md",
+    "ai-docs/TODO_NEXT.md",
+    "ai-docs/TEAM_STATE.md",
+    "ai-docs/RELEASE_NOTES.md",
+    "TODO_NEXT.md"
+  ]
+}
