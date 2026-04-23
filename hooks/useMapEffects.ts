@@ -8,12 +8,13 @@
 // keeping them co-located. Documented in RELEASE_NOTES v21.
 
 import { MutableRefObject, useEffect } from "react";
-import { computeClusters } from "../lib/map/clustering";
+import { computeClusters, tagPeaks, tagCastles } from "../lib/map/clustering";
 import { getPeakId } from "../lib/page-utils";
 import { loadLeaflet } from "../lib/map/leaflet-loader";
 import { addOrSwapBaseLayer } from "../components/MapContainer";
 import { CZECH_REPUBLIC_BOUNDS } from "../lib/page-utils";
 import type { MapPoint, ChallengeItem, MapBounds } from "../lib/page-types";
+import type { CastlePoint } from "../lib/castles/types";
 import type { BaseMapType } from "../lib/page-config";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -27,6 +28,8 @@ interface MapEffectsParams {
   selectedPeak: MapPoint | null;
   selectedChallengeId: string | null;
   modulePoints: MapPoint[];
+  castlePoints: CastlePoint[];
+  showCastles: boolean;
   allChallenges: ChallengeItem[];
   allPoints: MapPoint[];
   userAscents: Map<number, { count: number; dates: string[] }>;
@@ -51,6 +54,7 @@ interface MapEffectsParams {
   setMapBounds: (b: MapBounds) => void;
   setError: (msg: string) => void;
   setSelectedPeak: (p: MapPoint | null) => void;
+  setSelectedCastle: (c: CastlePoint | null) => void;
   setWaypointStatus: (s: string | null) => void;
   computePeakIds: (challenge: ChallengeItem) => number[];
   pointColorByName: (name: string) => string;
@@ -58,13 +62,13 @@ interface MapEffectsParams {
 
 export function useMapEffects({
   baseMap, mapReady, activeSection, activeModule,
-  selectedPeak, selectedChallengeId, modulePoints,
+  selectedPeak, selectedChallengeId, modulePoints, castlePoints, showCastles,
   allChallenges, allPoints, userAscents, peakById, selectedLetterColorMap,
   areaSelectMapContainerRef, areaSelectMapRef, areaPeaksLayerGroupRef,
   peakMarkersRef, areaBaseLayerRef, leafletRef, aiLayerGroupRef, aiRouteLayerRef,
   challengePeakIdsRef, mapBoundsTimerRef, activeTripIdRef, waypointCountRef,
   aiMapPoints, aiRoute,
-  setMapReady, setMapBounds, setError, setSelectedPeak, setWaypointStatus,
+  setMapReady, setMapBounds, setError, setSelectedPeak, setSelectedCastle, setWaypointStatus,
   computePeakIds, pointColorByName,
 }: MapEffectsParams): void {
   // Map init + base layer swap
@@ -107,23 +111,34 @@ export function useMapEffects({
     return () => clearTimeout(t);
   }, [mapReady, activeSection, activeModule]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Render peak markers
+  // Render peak + castle markers (unified clustering)
   useEffect(() => {
     const L = leafletRef.current;
     const group = areaPeaksLayerGroupRef.current;
     if (!mapReady || !L || !group) return;
     function radiusForZoom(zoom: number) { return zoom >= 13 ? 7 : 5; }
+    function clusterColor(kinds: Set<import("../lib/map/clustering").PointKind>) {
+      if (kinds.has("peak") && kinds.has("castle")) return "#7c3aed";
+      if (kinds.has("castle")) return "#7c3aed";
+      return "#0f172a";
+    }
     function renderMarkers() {
       peakMarkersRef.current.clear(); group.clearLayers();
       const zoom = areaSelectMapRef.current?.getZoom() ?? 8;
       const b = areaSelectMapRef.current?.getBounds();
       const bounds = b ? { west: b.getWest(), south: b.getSouth(), east: b.getEast(), north: b.getNorth() } : { west: 12, south: 49, east: 19, north: 51 };
-      for (const item of computeClusters(modulePoints, zoom, bounds)) {
+      const tagged = [...tagPeaks(modulePoints), ...(showCastles ? tagCastles(castlePoints) : [])];
+      for (const item of computeClusters(tagged, zoom, bounds)) {
         if (item.type === "cluster") {
           const size = Math.min(28 + Math.round(Math.sqrt(item.count)), 52);
-          const m = L.marker([item.lat, item.lon], { icon: L.divIcon({ html: `<span>${item.count}</span>`, className: "cluster-marker", iconSize: [size, size], iconAnchor: [size / 2, size / 2] }), interactive: true, zIndexOffset: -100 });
+          const bg = clusterColor(item.kinds);
+          const m = L.marker([item.lat, item.lon], { icon: L.divIcon({ html: `<span>${item.count}</span>`, className: "cluster-marker", iconSize: [size, size], iconAnchor: [size / 2, size / 2], style: `background:${bg}` }), interactive: true, zIndexOffset: -100 });
           m.addTo(group);
           m.on("click", () => { const map = areaSelectMapRef.current; if (map) map.setView([item.lat, item.lon], Math.min(map.getZoom() + 2, 14)); });
+        } else if (item.kind === "castle") {
+          const marker = L.circleMarker([item.point.lat, item.point.lon], { radius: radiusForZoom(zoom), color: "#7c3aed", weight: 2, fillColor: "#ede9fe", fillOpacity: 0.9, zIndexOffset: 100 });
+          marker.on("click", () => setSelectedCastle(item.point));
+          marker.addTo(group);
         } else {
           const latN = Number(item.point.lat); const lonN = Number(item.point.lon);
           if (!Number.isFinite(latN) || !Number.isFinite(lonN)) continue;
@@ -148,7 +163,7 @@ export function useMapEffects({
     renderMarkers();
     areaSelectMapRef.current?.off("zoomend"); areaSelectMapRef.current?.on("zoomend", renderMarkers); areaSelectMapRef.current?.on("moveend", renderMarkers);
     return () => { areaSelectMapRef.current?.off("zoomend", renderMarkers); areaSelectMapRef.current?.off("moveend", renderMarkers); };
-  }, [mapReady, modulePoints, selectedLetterColorMap, userAscents]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [mapReady, modulePoints, castlePoints, showCastles, selectedLetterColorMap, userAscents]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Pan to selected peak
   useEffect(() => {

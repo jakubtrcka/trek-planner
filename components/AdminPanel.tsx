@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Mountain, Trophy, MapPinned } from "lucide-react";
+import { Loader2, Mountain, Trophy, MapPinned, Castle } from "lucide-react";
 import { Button } from "./ui/button";
 
 type ButtonState = "idle" | "loading" | "success" | "error";
-type ActionKey = "peaks" | "challenges" | "areas";
+type ActionKey = "peaks" | "challenges" | "areas" | "castles";
 
 type ActionStates = Record<ActionKey, ButtonState>;
 type ActionErrors = Partial<Record<ActionKey, string>>;
@@ -19,7 +19,7 @@ async function callEndpoint(url: string): Promise<void> {
 }
 
 export function AdminPanel() {
-  const [states, setStates] = useState<ActionStates>({ peaks: "idle", challenges: "idle", areas: "idle" });
+  const [states, setStates] = useState<ActionStates>({ peaks: "idle", challenges: "idle", areas: "idle", castles: "idle" });
   const [errors, setErrors] = useState<ActionErrors>({});
 
   async function handleSync(key: ActionKey, url: string) {
@@ -38,6 +38,7 @@ export function AdminPanel() {
     { key: "peaks", label: "Sync Vrcholy", icon: <Mountain className="h-4 w-4" />, url: "/api/sync-peaks" },
     { key: "challenges", label: "Sync Výzvy", icon: <Trophy className="h-4 w-4" />, url: "/api/sync-challenges" },
     { key: "areas", label: "Sync Oblasti", icon: <MapPinned className="h-4 w-4" />, url: "/api/sync-areas" },
+    { key: "castles", label: "Sync Zámky", icon: <Castle className="h-4 w-4" />, url: "/api/sync-castles" },
   ];
 
   return (

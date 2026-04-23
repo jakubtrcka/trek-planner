@@ -1,61 +1,80 @@
 # TODO_NEXT.md — Zadání pro [[ai-docs/CODER|Codera]]
-> Vytvořil: [[ai-docs/ARCHITECT|Lead Architect]] | Aktualizováno: 2026-04-22 (rev. 26)
+> Vytvořil: [[ai-docs/ARCHITECT|Lead Architect]] | Aktualizováno: 2026-04-23 (rev. 32)
 
 ---
 
-## Aktuální priorita: v13 — Nový modul Zámky (první rozšíření platformy)
+## Priorita 1: TD-stub — Smazání `useCastleLayer.ts` no-op stub
 
-**Strategický pivot (schváleno Architektem 2026-04-22):**
-Projekt se přeorientovává na multi-modulární POI platformu. Manuální plánování tras (TripPanel, RoutesSidebar) zůstává v kódu, ale nedostává žádné nové investice. Budoucí plánování tras půjde výhradně přes AI asistenta (ChatPanel). Bezprostřední priorita je rozšiřování platformy o nové POI moduly a evidence návštěv.
+### Kontext
+`hooks/useCastleLayer.ts` byl v v15a deprecován jako no-op stub (3 řádky) — rendering byl přesunut do `useMapEffects`. Stub byl zachován konzervativně pro případ externích referencí. Než přistoupíme k v16, musí být mrtvý kód odstraněn, aby refaktor začínal čistou bází.
+
+### Zadání
+- Ověř, že `useCastleLayer.ts` není referencován nikde v projektu (grep přes `.ts`, `.tsx`).
+- Pokud neexistují reference: soubor smaž. Pokud reference existují, odstraň je a pak smaž soubor.
+- Updatuj seznam hooks v `ai-docs/PROJECT_CONTEXT.md` (sekce Frontendová architektura) — odeber `hooks/useCastleLayer.ts`.
+- TS 0 chyb, build OK povinné.
+
+**Soubory:** `hooks/useCastleLayer.ts`, případně soubory s referencemi, `ai-docs/PROJECT_CONTEXT.md`.
 
 ---
 
-### v13 — Nový modul: Zámky
+## Priorita 2: v16 — Generalizace `useModuleSidebar` logiky
 
-**Cíl:** Přidat druhý POI modul (Zámky) a tím ověřit modulární architekturu v praxi. Modul musí prokázat, že stávající DB schéma, provider vrstva a visit tracking fungují genericky — bez úprav core platformy.
+### Kontext (rozhodnutí Architekta — SPUŠTĚNO)
+`CastlesSidebar` a `PeaksSidebar` sdílejí identickou logiku: search filter, "Filtrovat podle mapy" toggle, item selection pattern. Se dvěma moduly je duplicita ještě zvládnutelná; před přidáním třetího modulu je extrakce sdílené logiky podmínkou škálovatelnosti.
 
-#### v13.1 — DB seed: modul `castles`
-- `lib/db/seed.ts` rozšířit o idempotentní insert pro modul `castles` (slug: `castles`, name: `Zámky`, icon: `castle`).
-- Přidat `location_type` pro `castle` (module_id = castles modul).
-- Vzor: kopírovat stávající `mountains` seed blok. `onConflictDoUpdate` pattern povinný.
+### Architektonické rozhodnutí
+Preferovaný přístup: **sdílený hook `hooks/useModuleSidebar.ts`** — ne sdílená UI komponenta. Důvod: `PeaksSidebar` má komplexní filtrování (oblasti, písmena, range, země) které není přítomné v `CastlesSidebar` — společná UI komponenta by byla přeplněna optional props. Sdílená logika v hooku je méně invazivní a zachovává modul-specifické UI volnost.
 
-#### v13.2 — Provider `providers/castles/`
-- Nový provider adresář: `providers/castles/`.
-- `CastlesParserService.ts` — **bez Playwright**. Parsuje lokální soubor `/export.geojson` (OSM Overpass export, ODbL licence).
-- **GeoJSON schéma:**
-  - `features[].type === "Feature"`
-  - `features[].geometry.type` je `"Polygon"` nebo `"Point"` (OSM relation/way/node). Pro souřadnice: pokud `geometry.type === "Point"` → `coordinates[0], coordinates[1]`; pokud `"Polygon"` → centroid z `coordinates[0]` (průměr bodů polygonu) nebo první bod `coordinates[0][0]`.
-  - `features[].properties`: `name` (string), `historic` (hodnota `"castle"` nebo jiná), `website` (string | undefined), `wikidata` (string | undefined), `opening_hours` (string | undefined), `"@id"` (string, formát `"relation/18139"` nebo `"way/..."` nebo `"node/..."` — použít jako `external_id`).
-- Výstup: pole objektů kompatibilní s `locations` upsert schématem (`name`, `lat`, `lon`, `external_id`, `external_url`, `metadata`).
-  - `external_id` = hodnota `properties["@id"]` (např. `"relation/18139"`)
-  - `external_url` = `properties.website` (pokud existuje) nebo `https://www.openstreetmap.org/<@id>`
-  - `metadata` JSONB = `{ wikidata, opening_hours, historic }` (vynechat undefined hodnoty)
-  - Filtrovat features bez `name` nebo bez souřadnic.
-- **Vzor parseru:** jednoduchý `fs.readFileSync` + `JSON.parse` — bez Playwright.
+### Zadání
 
-#### v13.3 — Sync API route pro Zámky
-- `POST /api/sync-castles` (admin-only) — stejný pattern jako `/api/sync-peaks`.
-  - Volá `CastlesParserService.parse()` (čte `/export.geojson` ze server-side file systému).
-  - **Pozor:** `export.geojson` je v project rootu (`/export.geojson` relativně od CWD procesu Next.js). Použít `path.resolve(process.cwd(), 'export.geojson')` nebo `path.join(__dirname, '../../../export.geojson')` — ověřit cestu při implementaci.
-- Tlačítko "Sync Zámky" v `AdminPanel.tsx`.
-- `GET /api/castles` (veřejný endpoint) — vrací lokality modulu `castles`.
+**v16.1 — Audit duplicity**
+- Porovnej `components/CastlesSidebar.tsx` a `components/PeaksSidebar.tsx`.
+- Identifikuj logiku, která je skutečně totožná: search filter (lowercase includes), map-bounds toggle state, item selection/deselection pattern.
+- Zapiš zjištění do RELEASE_NOTES jako součást v16.1 (max 5 řádků).
 
-#### v13.4 — Visit tracking pro Zámky
-- Ověřit, že `POST /api/user-visits` a `DELETE /api/user-visits/[locationId]` fungují genericky pro `castles` lokality (měly by — používají `location_id` UUID, ne modul-specifické klíče).
-- `CastleDetail.tsx` — detail komponenta analogická `PeakDetail.tsx`. Musí podporovat check-in tlačítko pro přihlášené uživatele.
-- Vzor: `components/PeakDetail.tsx`.
+**v16.2 — `hooks/useModuleSidebar.ts`**
+- Vytvoř `hooks/useModuleSidebar.ts` (≤60 ř.) jako generický hook pro sdílenou logiku sidebaru.
+- Hook přijme pole items a vrátí: `searchQuery`, `setSearchQuery`, `filtered` (items po aplikaci search filtru), `filterByMapBounds`, `setFilterByMapBounds`.
+- Hook je generický přes TypeScript generics (`<T extends { name?: string | null }>`) — neimportuje žádné modul-specifické typy.
+- `CastlesSidebar` i `PeaksSidebar` (pouze search + map-bounds část) přepíší lokální logiku na volání tohoto hooku.
 
-#### v13.5 — Mapová vrstva Zámky
-- `hooks/useDataFetching.ts` rozšířit o fetch `/api/castles` (paralelně s `/api/peaks`).
-- `app/page.tsx` — renderovat `castles` body na mapě jako samostatnou vrstvu (odlišná barva/ikona od hor).
-- Layer toggle pro modul Zámky (zapnout/vypnout vrstvu).
+**v16.3 — Refaktor `CastlesSidebar.tsx`**
+- `CastlesSidebar` je jednodušší případ (žádné extra filtry) — začni zde.
+- Nahraď inline search filter + filterByMapBounds state voláním `useModuleSidebar`.
+- Komponenta musí zůstat funkčně identická, UI beze změny.
+
+**v16.4 — Refaktor `PeaksSidebar.tsx` (pouze search)**
+- `PeaksSidebar` má komplexní filtrování — hook přebírá **pouze** search logiku (`peakSearchQuery` a `filtered` search pass).
+- Oblast, písmena, range, země filtry zůstávají v `PeaksSidebar` beze změny — hook se na ně nevztahuje.
+- Pokud by refaktor `PeaksSidebar` zvýšil komplexitu (hook neušetří víc než 5 řádků), v16.4 se přeskočí — zaznamenat do RELEASE_NOTES.
+
+**Poznámky:**
+- TS 0 chyb, build OK povinné po každém kroku.
+- `useModuleSidebar.ts` je getter hook (bez write operací) — mutační pattern zachován.
+- Soubory: `hooks/useModuleSidebar.ts` (NEW), `components/CastlesSidebar.tsx`, `components/PeaksSidebar.tsx`.
+
+---
+
+## Priorita 3: v17 — Ověření check-in parity Zámky vs. Vrcholy
+
+### Kontext
+`CastleDetail.tsx` má `onVisitChange` prop a check-in tlačítko — analogie `PeakDetail.tsx`. Nicméně `handleVisitChange` v `page.tsx` volá `mutateAscents()` + `mutateVisits()`, kde `mutateAscents` je specificky pro hory.app výstupy. Pro zámky je relevantní pouze `mutateVisits`.
+
+### Zadání
+- Ověř, zda `handleVisitChange` v `page.tsx` je generický a funguje pro `externalId` zámků i vrcholů bez podmínkování.
+- Pokud `mutateAscents()` se volá i pro castle check-in zbytečně: přidej `kind: "peak" | "castle"` parametr do `handleVisitChange` a `mutateAscents()` volej pouze pro kind `"peak"`.
+- Pokud vše funguje správně: zapiš "verified OK" do RELEASE_NOTES a uzavři mileston.
+- TS 0 chyb, build OK povinné.
+
+**Soubory:** `app/page.tsx`, `components/CastleDetail.tsx`.
 
 ---
 
 ### Deprioritizováno (nemazat, neinvestovat)
 
 - **Manuální plánování tras** — TripPanel, RoutesSidebar, waypoint management (v10–v12) jsou kompletní a funkční. Žádné nové featury do těchto komponent.
-- **Waypoint přidávání z mapy** (původní kandidát v13) — odloženo indefinitně.
+- **Waypoint přidávání z mapy** — odloženo indefinitně.
 
 ---
 
@@ -68,38 +87,14 @@ Projekt se přeorientovává na multi-modulární POI platformu. Manuální plá
 
 ## ✅ Uzavřené verze
 
+- **v15 + v15a + v15b + v15c + v15d** — Live Overpass sync pro zámky (CastlesScraperService, AbortController 60s, Zod validace), unified clustering (discriminated union TaggedInput, tagPeaks/tagCastles helpers, ClusterFeature.kinds), filtr vrcholů jako collapsible panel (SlidersHorizontal toggle, showPeakFilter state, activeFilterCount badge), AI chat jako floating window (mini ↔ expanded, interní expanded state, bottom-4 center), UI vylepšení (ChevronDown toggle pro panel, border-r fix, invalidateSize po resize). TS 0 chyb. Build OK (33 routes).
+- **v13 + v14** — Modul Zámky: seed (castles modul + castle location_type), CastlesParserService (OSM GeoJSON parser), sync+get API, CastleDetail, mapová vrstva (fialové markery), CastlesSidebar jako plnohodnotný tab, viditelnost bodů dle activeModule, useIsAdmin hook, GET /api/auth/is-admin, clustering opravy (maxZoom 10, minPoints 4). TS 0 chyb. Build OK (33 routes).
 - **v12** — Trips UX: RoutesSidebar verifikace (plně funkční, není stub). Odebrání waypointu (DELETE route + repository + X tlačítko s inline confirm). Řazení waypointů (PATCH route + reorder repository + šipky nahoru/dolů). TS 0 chyb. Build OK.
-- **v21** — Split `app/page.tsx` (187 ř. z 2772 ř.), 18 nových souborů.
-- **v22** — TD-22a: Split `lib/page-types.ts` a `lib/page-utils.ts` do doménových modulů. Všechny `lib/` soubory ≤60 ř. TS 0 chyb. Build OK.
-- **v23** — Fáze 8.1 + 8.2: Public `/api/peaks` endpoint ověřen. Odstraněn bootstrap auto-login. Mapa se načítá bez přihlášení z veřejného endpointu.
-- **v24** — TD-24a: File cache vrstva odstraněna. `map-points` čte výhradně z DB (GET). `sync-peaks` spouští live scrape → upsert do DB. TS 0 chyb.
-- **v25a** — TD-24b: Konsolidace `map-points` → `peaks`. `loadCachedPeaksForCountries` volá `/api/peaks`. `app/api/map-points/` smazán. TS 0 chyb.
-- **v25b** — Fáze 8.3: `AuthModal` (Dialog, zod, Better Auth). `AppHeader` trigger. `app/api/auth-state/` smazán. TS 0 chyb. Build OK.
-- **v26a** — Fáze 8.4: `useUserAscents` SWR conditional fetching dle session. `/api/user-ascents` se nevolá bez přihlášení. TS 0 chyb. Build OK.
-- **TD-cleanup** — `LoginScreen.tsx` vyčištěn: odstraněny stale `username`/`password` props a form. TS 0 chyb. Build OK.
-- **v8.5** — Nastavení modulu Hory: `SettingsModal.tsx` sekce credentials, `useHoryCredentials` hook (fetch/validate/save), `GET+POST /api/user/settings`, AES-256-GCM `lib/crypto.ts`. TS 0 chyb. Build OK.
-- **v8.6** — Admin panel `/admin`: `app/(admin)/admin/page.tsx` (Server Component, email allowlist via `ADMIN_EMAILS` env, redirect na `/`), `components/AdminPanel.tsx` (3 tlačítka: Sync Vrcholy, Sync Výzvy, Sync Oblasti=disabled). TS 0 chyb.
-- **v8.6.1** — Bugfix: přihlašovací dialog nešel vyplnit. Příčina: Leaflet z-index (až 700) překrýval dialog (z-50) + broken OKLCH Tailwind třídy. Fix: `isolate` na map wrapper v `app/page.tsx`, `z-[1100]` pro dialog overlay/content, OKLCH třídy nahrazeny standardními Tailwind třídami v `components/ui/dialog.tsx`.
-- **v8.7** — Sync výstupů při přihlášení: `onLoginSuccess` callback v `AuthModal` → `AppHeader` → `app/page.tsx`. Volá `loadUserAscents(true)` (POST `/api/user-ascents`). TD-build uzavřen.
-- **v9.1** — Fáze 9.1: Check-in mechanismus. `POST /api/user-visits`, `DELETE /api/user-visits/[locationId]`, `lib/db/visits-checkin-repository.ts`. Tlačítko v `PeakDetail.tsx`. TS 0 chyb. Build OK.
-- **v9.2** — Fáze 9.2: Visit statistiky v UI. `GET /api/user-visits`, `hooks/useUserVisits.ts`, zobrazení check-in count v `PeakDetail.tsx`. TS 0 chyb. Build OK.
-- **v9.4** — Konsolidace nastavení na `/admin`. `UserSettingsPanel.tsx`. `HoryUserService` login přepsán. Seed idempotence fix. `externalId` propagace + UPSERT fix.
-- **TD-orphan** — `components/SettingsModal.tsx` smazán. TS 0 chyb. Build OK.
-- **v9.3** — Fáze 9.3: `GET /api/user/challenges`, `lib/db/user-challenges-repository.ts`, `hooks/useUserChallenges.ts`. Badge "Splněno" v `ChallengesContent.tsx`. TS 0 chyb. Build OK.
-- **TD-schema-uc** — Unique index `user_challenges(userId, challengeId)`. `upsertUserChallenge` přepsán na `onConflictDoUpdate`. `pnpm drizzle-kit push` propagováno. TS 0 chyb. Build OK.
-- **v9.4** — Fáze 9.4: `areas` + `location_areas` tabulky v schema. `lib/db/areas-repository.ts`. `POST /api/sync-areas` (admin-only). Tlačítko "Sync Oblasti" aktivováno. TS 0 chyb. Build OK.
-- **v9.5** — Fáze 9.5: Linkování oblastí k vrcholům při sync. `slugFromSource()`, `areaSlugByLatLon` map, `linkLocationBySlug`. Response obsahuje `linked` count. TS 0 chyb. Build OK.
-- **v9.6** — Fáze 9.6: Filtrování vrcholů podle oblasti v UI. `GET /api/areas`, `lib/db/locations-area-repository.ts`, `hooks/useAreas.ts`. `MapPoint.areaSlugs` rozšíření. `/api/peaks` obohacen o `areaSlugs`. `PeaksSidebar` sekce "Oblasti DB". Client-side filtr přes `useMemo`. TS 0 chyb. Build OK.
-- **v9.7** — Perzistence výběru oblastí (`localStorage["hory-area-filter"]`), sanitizace obsoletních slugů po načtení dbAreas, tlačítko "Zobrazit vše" (Zrušit filtr), `filteredCount` badge nad vyhledávacím polem. TS 0 chyb. Build OK.
-- **v11** — Trips UX: v11.1 verifikace AI summary persistence (fungovala správně, `refetch()` po generate). v11.2 smazání výletu — `deleteTrip` v repository, `DELETE /api/trips/[id]`, `deleteTrip` hook, Trash2 button s inline confirm v TripPanel, `onTripDelete` callback. TS 0 chyb. Build OK.
-- **v10** — Rozšíření AI plánovače tras: v10.1 vizualizace trasy (useTripLayer, polyline + markery), v10.3 přejmenování výletu (inline edit, PATCH /api/trips/[id]), v10.2 GPX export (GET /api/trips/[id]/export). TS 0 chyb. Build OK.
-
----
-
-## Pending (neblokující)
-
-### TD-19-manual: Ruční DB krok
-`pnpm drizzle-kit push --force` v TTY pro drop `hory_ascents_cache` z DB. Stále čeká, není blokující pro vývoj.
+- **v10 + v11** — AI plánovač tras: vizualizace trasy (useTripLayer, polyline + markery), přejmenování výletu (inline edit, PATCH /api/trips/[id]), GPX export, AI summary persistence, smazání výletu (Trash2 + inline confirm). TS 0 chyb. Build OK.
+- **v9.7** — Perzistence výběru oblastí, tlačítko "Zobrazit vše", filteredCount badge. TS 0 chyb. Build OK.
+- **v9.1–v9.6** — Check-in, visit stats, challenges progres, oblasti sync + linkování + UI filtr. TS 0 chyb. Build OK.
+- **v8.5–v8.7** — Nastavení (AES-256-GCM), admin panel, sync při přihlášení. TS 0 chyb. Build OK.
+- **v21–v26a** — Split page.tsx, auth model refaktoring, public endpoints. TS 0 chyb. Build OK.
 
 ---
 
@@ -107,7 +102,9 @@ Projekt se přeorientovává na multi-modulární POI platformu. Manuální plá
 
 - Mutační pattern (v9.1) je závazný: mutace v `page.tsx`, hooks jsou čisté gettery.
 - `detail.ts` (244 ř.) v `providers/hory/challenges/` — trvalá výjimka pro `page.evaluate()` blok.
+- `useMapEffects.ts` (224 ř.) — akceptovaná výjimka pro kompoziční hook s více efekty. Limit 120 ř. platí pro nové soubory, ne pro tento.
 - `lib/` struktura je připravena pro další moduly — každý modul dostane vlastní `lib/<modul>/types.ts`.
 - `app/(admin)` — bez samostatného layoutu, Server Component ověřuje session před renderem.
 - Admin role check je přes `ADMIN_EMAILS` env allowlist (ne DB role). Granulární role = samostatný mileston.
 - GPX generace: bez externích knihoven — čistá string interpolace (žádná závislost navíc).
+- `useModuleSidebar` hook (v16): generický přes TypeScript generics, neimportuje modul-specifické typy — architektonická podmínka, ne doporučení.

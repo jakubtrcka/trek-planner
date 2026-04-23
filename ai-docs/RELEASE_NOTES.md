@@ -4,21 +4,22 @@
 
 ---
 
-## v — [Název iterace]
+<!-- Coder: vyplň tuto sekci po dokončení iterace -->
 
-### Status: ✅ Success / ❌ Failed / ⚠️ Partial
+## vXX — Název iterace
+
+### Status: ✅ / ❌
 
 ### Files Changed
 
 | Soubor | Operace | Řádky (wc -l) | Limit |
 |---|---|---|---|
-|  |  |  |  |
+| | | | |
 
 ### Technical Audit
 
 - **pnpm tsc --noEmit:**
 - **pnpm build:**
-- **pnpm drizzle-kit push:**
 
 ### Implementační poznámky
 

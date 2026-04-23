@@ -13,6 +13,7 @@ import type { CountryCode, MapPoint, RangeItem } from "../lib/page-types";
 import type { AreaRow } from "../lib/db/areas-repository";
 
 interface PeaksSidebarProps {
+  showFilter: boolean;
   selectedCountries: CountryCode[];
   selectedLetters: string[];
   letterMode: "strict" | "prefer";
@@ -50,6 +51,7 @@ interface PeaksSidebarProps {
 }
 
 export function PeaksSidebar({
+  showFilter,
   selectedCountries, selectedLetters, letterMode, showOtherLetters,
   selectedRangeUrls, rangeOptions, peakSort, peakSearchQuery,
   visiblePoints, sortedPoints, selectedPeak, openFilters,
@@ -61,92 +63,96 @@ export function PeaksSidebar({
 }: PeaksSidebarProps) {
   return (
     <div className="space-y-4">
-      <FilterSection id="countries" label={`Země (${selectedCountries.length})`} hint="Vyberte země, jejichž vrcholy chcete zobrazit." isOpen={openFilters.has("countries")} onToggle={onFilterToggle}>
-        <div className="flex flex-wrap gap-2">
-          {COUNTRY_CONFIG.map((country) => {
-            const active = selectedCountries.includes(country.code);
-            return (
-              <button key={country.code} type="button" title={country.label} onClick={() => onToggleCountry(country.code)}
-                className={cn("rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors", active ? "border-zinc-800 bg-zinc-800 text-white" : "border-zinc-200 bg-zinc-50 text-zinc-600 hover:bg-zinc-100")}>
-                {country.name}
-              </button>
-            );
-          })}
-        </div>
-      </FilterSection>
-
-      <FilterSection id="letters" label={selectedLetters.length > 0 ? `Písmena (${selectedLetters.length})` : "Písmena"} hint="Striktní režim skryje ostatní vrcholy, preferovaný je jen obarví." isOpen={openFilters.has("letters")} onToggle={onFilterToggle}>
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2">
-            <Button type="button" variant={letterMode === "strict" ? "default" : "outline"} className="w-full rounded-2xl" onClick={() => onLetterModeChange("strict")}>Striktní</Button>
-            <Button type="button" variant={letterMode === "prefer" ? "default" : "outline"} className="w-full rounded-2xl" onClick={() => onLetterModeChange("prefer")}>Preferovat</Button>
-          </div>
-          <label className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-700">
-            <input type="checkbox" checked={showOtherLetters} onChange={(e) => onShowOtherLettersChange(e.target.checked)} className="h-4 w-4 rounded border-zinc-300" />
-            <span>Zobrazit ostatní písmena šedě</span>
-          </label>
-          <div className="grid grid-cols-6 gap-2">
-            {CZECH_ALPHABET.map((letter) => (
-              <label key={letter}
-                className={selectedLetters.includes(letter) ? "letter-pill is-active" : "letter-pill"}
-                style={selectedLetters.includes(letter) ? ({ "--letter-color": selectedLetterColorMap.get(normalizeLetter(letter)) } as CSSProperties) : undefined}>
-                <input type="checkbox" checked={selectedLetters.includes(letter)} onChange={() => onToggleLetter(letter)} />
-                <span>{letter}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      </FilterSection>
-
-      {dbAreas.length > 0 && (
-        <FilterSection id="db-areas" label={selectedAreaSlugs.length > 0 ? `Oblasti DB (${selectedAreaSlugs.length})` : "Oblasti DB"} hint="Filtruje vrcholy propojené s oblastí v databázi." isOpen={openFilters.has("db-areas")} onToggle={onFilterToggle}>
-          <div className="space-y-2">
-            {selectedAreaSlugs.length > 0 && (
-              <button type="button" onClick={onClearAreaFilter}
-                className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900">
-                <X className="h-3 w-3" />
-                Zobrazit vše
-              </button>
-            )}
-            <ScrollArea className="max-h-64 rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
-              <div className="space-y-2">
-                {dbAreas.map((area) => (
-                  <label key={area.slug} className="flex items-center gap-3 rounded-xl px-2 py-2 text-sm text-zinc-700 hover:bg-white">
-                    <input type="checkbox" checked={selectedAreaSlugs.includes(area.slug)} onChange={() => onToggleAreaSlug(area.slug)} className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-300" />
-                    <span className="flex-1">{area.name}</span>
-                  </label>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-        </FilterSection>
-      )}
-
-      <FilterSection id="areas" label={selectedRangeUrls.length > 0 ? `Oblasti (${selectedRangeUrls.length})` : "Oblasti"} hint="Klikání v mapě a ruční výběr drží stejný stav." isOpen={openFilters.has("areas")} onToggle={onFilterToggle}>
-        <div className="space-y-3">
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" className="flex-1 rounded-2xl" onClick={onSelectAllRanges}>Vybrat vše</Button>
-            <Button type="button" variant="outline" className="flex-1 rounded-2xl" onClick={onClearRanges}>Zrušit</Button>
-          </div>
-          <ScrollArea className="max-h-64 rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
-            <div className="space-y-2">
-              {rangeOptions.map((range) => {
-                const stats = areaAscentStats.get(range.url);
-                const pct = stats && stats.total > 0 ? Math.round((stats.visited / stats.total) * 100) : null;
+      {showFilter && (
+        <>
+          <FilterSection id="countries" label={`Země (${selectedCountries.length})`} hint="Vyberte země, jejichž vrcholy chcete zobrazit." isOpen={openFilters.has("countries")} onToggle={onFilterToggle}>
+            <div className="flex flex-wrap gap-2">
+              {COUNTRY_CONFIG.map((country) => {
+                const active = selectedCountries.includes(country.code);
                 return (
-                  <label key={range.url} className="flex items-center gap-3 rounded-xl px-2 py-2 text-sm text-zinc-700 hover:bg-white">
-                    <input type="checkbox" checked={selectedRangeUrls.includes(range.url)} onChange={() => onToggleRange(range.url)} className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-300" />
-                    <span className="flex-1">{range.name}</span>
-                    {pct !== null && (
-                      <span className={cn("shrink-0 text-xs font-medium tabular-nums", pct === 100 ? "text-amber-500" : "text-zinc-400")}>{pct} %</span>
-                    )}
-                  </label>
+                  <button key={country.code} type="button" title={country.label} onClick={() => onToggleCountry(country.code)}
+                    className={cn("rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors", active ? "border-zinc-800 bg-zinc-800 text-white" : "border-zinc-200 bg-zinc-50 text-zinc-600 hover:bg-zinc-100")}>
+                    {country.name}
+                  </button>
                 );
               })}
             </div>
-          </ScrollArea>
-        </div>
-      </FilterSection>
+          </FilterSection>
+
+          <FilterSection id="letters" label={selectedLetters.length > 0 ? `Písmena (${selectedLetters.length})` : "Písmena"} hint="Striktní režim skryje ostatní vrcholy, preferovaný je jen obarví." isOpen={openFilters.has("letters")} onToggle={onFilterToggle}>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <Button type="button" variant={letterMode === "strict" ? "default" : "outline"} className="w-full rounded-2xl" onClick={() => onLetterModeChange("strict")}>Striktní</Button>
+                <Button type="button" variant={letterMode === "prefer" ? "default" : "outline"} className="w-full rounded-2xl" onClick={() => onLetterModeChange("prefer")}>Preferovat</Button>
+              </div>
+              <label className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-700">
+                <input type="checkbox" checked={showOtherLetters} onChange={(e) => onShowOtherLettersChange(e.target.checked)} className="h-4 w-4 rounded border-zinc-300" />
+                <span>Zobrazit ostatní písmena šedě</span>
+              </label>
+              <div className="grid grid-cols-6 gap-2">
+                {CZECH_ALPHABET.map((letter) => (
+                  <label key={letter}
+                    className={selectedLetters.includes(letter) ? "letter-pill is-active" : "letter-pill"}
+                    style={selectedLetters.includes(letter) ? ({ "--letter-color": selectedLetterColorMap.get(normalizeLetter(letter)) } as CSSProperties) : undefined}>
+                    <input type="checkbox" checked={selectedLetters.includes(letter)} onChange={() => onToggleLetter(letter)} />
+                    <span>{letter}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </FilterSection>
+
+          {dbAreas.length > 0 && (
+            <FilterSection id="db-areas" label={selectedAreaSlugs.length > 0 ? `Oblasti DB (${selectedAreaSlugs.length})` : "Oblasti DB"} hint="Filtruje vrcholy propojené s oblastí v databázi." isOpen={openFilters.has("db-areas")} onToggle={onFilterToggle}>
+              <div className="space-y-2">
+                {selectedAreaSlugs.length > 0 && (
+                  <button type="button" onClick={onClearAreaFilter}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900">
+                    <X className="h-3 w-3" />
+                    Zobrazit vše
+                  </button>
+                )}
+                <ScrollArea className="max-h-64 rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
+                  <div className="space-y-2">
+                    {dbAreas.map((area) => (
+                      <label key={area.slug} className="flex items-center gap-3 rounded-xl px-2 py-2 text-sm text-zinc-700 hover:bg-white">
+                        <input type="checkbox" checked={selectedAreaSlugs.includes(area.slug)} onChange={() => onToggleAreaSlug(area.slug)} className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-300" />
+                        <span className="flex-1">{area.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            </FilterSection>
+          )}
+
+          <FilterSection id="areas" label={selectedRangeUrls.length > 0 ? `Oblasti (${selectedRangeUrls.length})` : "Oblasti"} hint="Klikání v mapě a ruční výběr drží stejný stav." isOpen={openFilters.has("areas")} onToggle={onFilterToggle}>
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" className="flex-1 rounded-2xl" onClick={onSelectAllRanges}>Vybrat vše</Button>
+                <Button type="button" variant="outline" className="flex-1 rounded-2xl" onClick={onClearRanges}>Zrušit</Button>
+              </div>
+              <ScrollArea className="max-h-64 rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
+                <div className="space-y-2">
+                  {rangeOptions.map((range) => {
+                    const stats = areaAscentStats.get(range.url);
+                    const pct = stats && stats.total > 0 ? Math.round((stats.visited / stats.total) * 100) : null;
+                    return (
+                      <label key={range.url} className="flex items-center gap-3 rounded-xl px-2 py-2 text-sm text-zinc-700 hover:bg-white">
+                        <input type="checkbox" checked={selectedRangeUrls.includes(range.url)} onChange={() => onToggleRange(range.url)} className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-300" />
+                        <span className="flex-1">{range.name}</span>
+                        {pct !== null && (
+                          <span className={cn("shrink-0 text-xs font-medium tabular-nums", pct === 100 ? "text-amber-500" : "text-zinc-400")}>{pct} %</span>
+                        )}
+                      </label>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </div>
+          </FilterSection>
+        </>
+      )}
 
       <div className="flex min-h-0 flex-col" style={{ minHeight: 0 }}>
         <div className="mb-2 px-1 space-y-2">

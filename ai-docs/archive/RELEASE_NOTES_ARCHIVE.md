@@ -1,4 +1,130 @@
 
+## v15 + v15a + v15b + v15c + v15d — Live Overpass sync, unified clustering, collapsible filter, floating chat, UI opravy (přesunuto z RELEASE_NOTES.md 2026-04-23)
+
+> Datum: 2026-04-23 | Branch: main | Verze: v15, v15a, v15b, v15c, v15d
+
+### Status: ✅ Success (všechny sub-verze)
+
+#### v15 — Zámky: Live Overpass sync (nahrazení GeoJSON souboru)
+
+| Soubor | Operace | Řádky |
+|---|---|---|
+| `providers/castles/CastlesScraperService.ts` | CREATE | 103 |
+| `providers/castles/CastlesParserService.ts` | UPDATE (+parseRaw) | 116 |
+| `app/api/sync-castles/route.ts` | UPDATE | 55 |
+
+- `CastlesScraperService.scrape()` volá Overpass API s bbox CZ+SK (46.5–51.5 lat, 12.0–22.5 lon)
+- Query: `historic=castle` a `historic=chateau` pro nody, ways i relations
+- `AbortController` 60s timeout. Zod validace přes `OverpassNodeSchema`. `resolveCoords()` pro ways/relations (center objekt).
+- `CastlesParserService.parseRaw()` přidána jako validační pass-through; `parse()` (GeoJSON file) zachována.
+- `POST /api/sync-castles` nyní volá `scraper.scrape()` → `parser.parseRaw()` místo file-based `parser.parse()`.
+
+#### v15a — Unified clustering pro vrcholy + zámky
+
+| Soubor | Operace | Řádky |
+|---|---|---|
+| `lib/map/clustering.ts` | UPDATE | 69 |
+| `hooks/useMapEffects.ts` | UPDATE | 224 |
+| `hooks/useCastleLayer.ts` | DEPRECATE (no-op stub) | 3 |
+| `app/page.tsx` | UPDATE | 333 |
+
+- `ClusterResult` discriminated union: `PointFeaturePeak | PointFeatureCastle`
+- `ClusterFeature.kinds: Set<PointKind>` — reflektuje obsah clusteru (peak/castle/mix)
+- `computeClusters()` přijímá `TaggedInput[]`. Helpers `tagPeaks()` a `tagCastles()`.
+- Cluster barva: mix = fialová (`#7c3aed`), pouze peak = dark (`#0f172a`).
+- `useMapEffects` přijímá `castlePoints: CastlePoint[]` a `showCastles: boolean`.
+- `useCastleLayer.ts` deprecated jako no-op stub — rendering přesunut do `useMapEffects`.
+
+#### v15b — Filtr vrcholů jako collapsible panel
+
+| Soubor | Operace | Řádky |
+|---|---|---|
+| `components/PeaksSidebar.tsx` | UPDATE | 211 |
+| `app/page.tsx` | UPDATE | 333 |
+
+- `showPeakFilter: boolean` state (výchozí `false`, neperzistuje).
+- Toggle: `SlidersHorizontal` Lucide ikona v záhlaví sekce "Vrcholy".
+- `activeFilterCount` badge: počítá selectedLetters, selectedAreaSlugs, selectedRangeUrls, selectedCountries (≠ jen CZ).
+- `PeaksSidebar` prop `showFilter: boolean` — při `false` FilterSection nere renderuje.
+
+#### v15c — AI asistent jako floating window
+
+| Soubor | Operace | Řádky |
+|---|---|---|
+| `components/ChatPanel.tsx` | UPDATE | 126 |
+| `app/page.tsx` | UPDATE | 333 |
+
+- `ChatPanel`: interní `expanded: boolean` (výchozí `false`).
+- Mini: floating `w-72`, `z-[850]`, `bottom-4 left-1/2 -translate-x-1/2` (horizontální střed).
+- Expanded: `w-[420px]` overlay, zprávy zůstávají. Zavírací X → mini stav.
+- `<ChatPanel>` přesunut z aside do mapové oblasti div.
+
+#### v15d — UI vylepšení: navigace, logo, legenda, chat, invalidateSize
+
+| Soubor | Operace |
+|---|---|
+| `app/page.tsx` | UPDATE |
+| `components/ChatPanel.tsx` | UPDATE |
+
+- Panel toggle: `ChevronDown` ikona v icon baru (otáčí se 200ms), tlačítko z hlavičky odstraněno.
+- Modulová tlačítka přepínají modul a vždy otevírají panel (toggle chování odebráno).
+- `border-r` přesunut z aside na panel div — při zavřeném panelu jedna čára.
+- Logo (Mountain ikona) odstraněno. Legenda Zámky ze spodního rohu odstraněna.
+- Chat: `bottom-4 left-1/2 -translate-x-1/2` — horizontální střed v mapovém framu.
+- `invalidateSize()` s 210ms zpožděním po změně `isModulePanelOpen` — Leaflet přepočítá rozměry.
+
+**Technical Audit:** `pnpm tsc --noEmit` 0 chyb. `pnpm build` ✅ — 33 routes (všechny sub-verze).
+
+---
+
+## v13 + v14 — Modul Zámky + UX opravy (přesunuto z RELEASE_NOTES.md 2026-04-23)
+
+> Datum: 2026-04-23 | Branch: main | Verze: v13.1–v13.5, v14
+
+### Status: ✅ Success
+
+| Soubor | Operace | Řádky (wc -l) | Limit |
+|---|---|---|---|
+| `lib/db/seed.ts` | MODIFY (+castles module + castle location type) | 43 | ≤60 |
+| `providers/castles/CastlesParserService.ts` | CREATE | 110 | ≤120 |
+| `lib/castles/types.ts` | CREATE (domain types) | 24 | ≤60 |
+| `lib/db/locations-repository.ts` | MODIFY (+getAllLocationsByModule) | 58 | ≤60 |
+| `app/api/sync-castles/route.ts` | CREATE (POST, admin-only) | 52 | ≤80 |
+| `app/api/castles/route.ts` | CREATE (GET, public) | 28 | ≤50 |
+| `components/AdminPanel.tsx` | MODIFY (+Sync Zámky button) | 71 | — (UI komponenta) |
+| `components/CastleDetail.tsx` | CREATE | 86 | — (UI komponenta) |
+| `components/CastlesSidebar.tsx` | CREATE | — | — (UI komponenta) |
+| `hooks/useCastles.ts` | CREATE (SWR getter) | 25 | ≤25 |
+| `hooks/useCastleLayer.ts` | CREATE (Leaflet layer, kompoziční) | 48 | ≤120 |
+| `hooks/useIsAdmin.ts` | CREATE (SWR) | — | ≤25 |
+| `app/api/auth/is-admin/route.ts` | CREATE | — | ≤30 |
+| `lib/map/clustering.ts` | MODIFY (méně agresivní parametry) | — | — |
+| `app/page.tsx` | MODIFY (+castles state, hooks, layer toggle, CastleDetail, viditelnost dle activeModule, admin check) | 288 | — (orchestrátor) |
+
+**Technical Audit:** `pnpm tsc --noEmit` 0 chyb. `pnpm build` ✅ — 33 routes.
+
+**v13.1 — DB Seed:** `seedModules()` rozšířena o idempotentní insert pro modul `castles` (slug: `castles`, name: `Zámky`, icon: `castle`) a `location_type` `castle`. Pattern `onConflictDoUpdate` / `onConflictDoNothing` dodržen.
+
+**v13.2 — CastlesParserService:** Čte `export.geojson` z `process.cwd()`. Validace přes Zod discriminatedUnion pro `Point` a `Polygon` geometrie. Pro Polygon centroid z prvního ringu průměrem souřadnic. `external_id` = `properties["@id"]`. Features bez `name` nebo souřadnic filtrovány. `metadata` JSONB: `wikidata`, `opening_hours`, `historic`.
+
+**v13.3 — API routes:** `POST /api/sync-castles` (admin-only, ADMIN_EMAILS pattern). `GET /api/castles` (veřejný). `getAllLocationsByModule(moduleId)` — JOIN přes `location_types.module_id`. `AdminPanel.tsx` rozšířen o 4. tlačítko "Sync Zámky" (Lucide Castle ikona).
+
+**v13.4 — CastleDetail:** Analogická `PeakDetail.tsx`. Zobrazuje název, souřadnice, otevírací dobu, check-in tlačítko pro přihlášené uživatele, odkaz na zdroj. Sdílí `onVisitChange` mutaci z `page.tsx` — funguje genericky přes `externalId`.
+
+**v13.5 — Mapová vrstva:** `useCastles` (SWR, 25 ř.). `useCastleLayer` (fialové `circleMarker` body, 48 ř.). Vrstva toggleovatelná tlačítkem. Při výběru zámku z mapy se zobrazí `CastleDetail` panel.
+
+**v14 — CastlesSidebar + UX opravy:**
+- `CastlesSidebar.tsx`: plnohodnotný tab v levém menu (Castle ikona, analogie PeaksSidebar). Fulltext search, "Filtrovat podle mapy" checkbox (výchozí: zapnuto), flyTo zoom 14 při výběru.
+- Viditelnost dle `activeModule`: `hory` → pouze vrcholy, `zamky` → pouze zámky, `routes`/`trips` → vše viditelné.
+- `GET /api/auth/is-admin` + `hooks/useIsAdmin.ts`: Settings ikona viditelná pouze pro `!!session && isAdmin`.
+- Clustering: `maxZoom` 14→10, `minPoints` 2→4, `radius` 60→55px.
+
+**Odchylky:**
+- `useCastles` jako samostatný SWR hook (místo rozšiřování `useDataFetching.ts` na 229 ř.) — architektonicky čistější.
+- V iteraci v13 byl `CastleDetail` renderován jako overlay; v14 přepracován jako integrovaný detail v `CastlesSidebar`. v14 je definitivní architektura.
+
+---
+
 ## v12 — Trips UX: RoutesSidebar verifikace + Odebrání waypointu + Řazení waypointů (plný záznam — přesunuto z RELEASE_NOTES.md 2026-04-22)
 
 > Datum: 2026-04-22 | Branch: main | Verze: v12.1, v12.3, v12.2
@@ -14,17 +140,15 @@
 | `components/TripPanel.tsx` | MODIFY (+waypoints display, delete, reorder) | 158 | — (UI komponenta) |
 | `app/page.tsx` | MODIFY (+handleWaypointDelete, +handleWaypointReorder callbacks) | — | — (orchestrátor) |
 
-**Technical Audit:** `pnpm tsc --noEmit` 0 chyb. `pnpm build` ✅ — 33 routes. `pnpm drizzle-kit push` není potřeba — žádná změna DB schématu.
+**Technical Audit:** `pnpm tsc --noEmit` 0 chyb. `pnpm build` ✅ — 33 routes.
 
-**v12.1 — Verifikace RoutesSidebar:** `components/RoutesSidebar.tsx` (87 ř.) je plně funkční komponenta aktivně renderovaná v `app/page.tsx` pro `activeModule === "routes"`. Přijímá 12 props (AI prompt, loading state, route mode, max distance, planning submit handlers). Není stub — obsahuje dva Cards (AI prompt + parametry trasy) a podmíněně renderovanou AI interpretaci.
+**v12.1 — Verifikace RoutesSidebar:** Plně funkční (87 ř.), aktivně renderovaná. Není stub.
 
-**v12.3 — Odebrání waypointu:** `deleteWaypoint(tripId, userId, waypointId)` v novém `trips-waypoints-repository.ts`: ownership check přes `trips.userId`, DELETE s podmínkou `tripId + waypointId`, vrací `boolean`. `DELETE /api/trips/[id]/waypoints/[waypointId]`: auth-guard, parse, delegace. UI: X tlačítko s `confirmWpDeleteId` state (inline confirm, bez `window.confirm`). Po potvrzení: callback `onWaypointDelete` z `page.tsx` + local `refetchWaypoints()`.
+**v12.3 — Odebrání waypointu:** `deleteWaypoint(tripId, userId, waypointId)` — ownership check, boolean return. `DELETE /api/trips/[id]/waypoints/[waypointId]`. X tlačítko s `confirmWpDeleteId` inline confirm.
 
-**v12.2 — Řazení waypointů:** `reorderWaypoints(tripId, userId, orderedIds)`: ownership check, validace existence všech IDs, DB transaction pro atomický update `order` pole. `PATCH /api/trips/[id]/waypoints`: přijme `{ orderedIds: number[] }`. UI: ChevronUp/Down tlačítka (disabled pro první/poslední). Lokální swap v seřazeném poli + `onWaypointReorder` callback. `waypointStatus` incrementován po každé mutaci → trigger `useTripLayer` re-fetch.
+**v12.2 — Řazení waypointů:** `reorderWaypoints(tripId, userId, orderedIds)` — ownership check, validace IDs, DB transaction. `PATCH /api/trips/[id]/waypoints`. ChevronUp/Down tlačítka (disabled pro první/poslední). `waypointStatus` counter jako trigger.
 
-**useTripWaypoints hook:** Nový getter hook (19 ř.) — `useCallback + useEffect` pattern. Exportuje `{ waypoints, refetch }`.
-
-**Odchylky:** `app/api/trips/[id]/waypoints/route.ts` — 65 ř. (limit 50, výjimka 80). Zdůvodnění: 3 HTTP handlery (GET, POST, PATCH) + 2 Zod schémata — klasifikováno jako komplexní input. Pořadí implementace: v12.1 → v12.3 → v12.2 (dle technické poznámky v TODO).
+**Odchylky:** `waypoints/route.ts` 65 ř. (výjimka 80) — 3 handlers + 2 Zod schémata.
 
 ---
 
@@ -42,17 +166,11 @@
 | `components/TripPanel.tsx` | MODIFY (+delete button + onTripDelete prop) | 135 | — (UI komponenta) |
 | `app/page.tsx` | MODIFY (onTripDelete prop) | 248 | — (orchestrátor) |
 
-**Technical Audit:** `pnpm tsc --noEmit` 0 chyb. `pnpm build` ✅ — 31 routes. `pnpm drizzle-kit push` není potřeba — žádná změna DB schématu.
+**Technical Audit:** `pnpm tsc --noEmit` 0 chyb. `pnpm build` ✅ — 31 routes.
 
-**v11.1 — Persist AI summary:** Ověřeno, že `POST /api/trips/[id]/ai-summary` volá `updateTripAiSummary(tripId, text)` a vrací `{ summary: text }`. `TripPanel.tsx` volá `await refetch()` po úspěchu — `trips` stav přenačten z DB. Po refreshi stránky `activeTrip.aiSummary` pochází z DB. Peristence fungovala správně již před v11 — v11.1 je formální verifikace bez nutnosti dalšího kódu.
+**v11.1 — Persist AI summary:** Formální verifikace — persistencia fungovala správně, kód beze změny.
 
-**v11.2 — Smazání výletu:**
-- `deleteTrip(id, userId)` v repository: DELETE s WHERE userId (ownership guard). Waypoints smažou kaskádou přes FK `ON DELETE CASCADE`.
-- `DELETE /api/trips/[id]`: auth-guard + parse + ownership-scoped DELETE → `{ ok: true }` nebo 404.
-- `deleteTrip(id)` v hook: fetch DELETE + `refetch()` po úspěchu.
-- UI: Lucide `Trash2` button na každé trip kartě. Dvě-kliková konfirmace přes `confirmDeleteId` state (bez `window.confirm` — čisté React state pattern). Po potvrzení: `onActiveTripChange(null)` + `onTripDelete()` callback.
-
-**Odchylky:** `hooks/useTrips.ts` má 38 řádků — přesahuje 25-ř. limit pro getter hooks. Klasifikováno jako kompoziční hook (agreguje `createTrip`, `renameTrip`, `deleteTrip`, `refetch` — 4 async operace). Platí 120-ř. kompoziční výjimka. Inline confirm state místo `window.confirm` dle zadání — čistší UX (červené zbarvení + tooltip bez browser dialogu).
+**v11.2 — Smazání výletu:** `deleteTrip(id, userId)` — ownership guard, kaskádové FK. `DELETE /api/trips/[id]`. `Trash2` button s `confirmDeleteId` state (dvě-kliková konfirmace bez `window.confirm`).
 
 ---
 
@@ -72,66 +190,16 @@
 | `components/TripPanel.tsx` | MODIFY | 91 | — |
 | `app/page.tsx` | MODIFY | ~245 | — |
 
-**Technical Audit:** `pnpm tsc --noEmit` 0 chyb. `pnpm build` ✅. `pnpm drizzle-kit push` není potřeba — žádné změny schématu.
+**Technical Audit:** `pnpm tsc --noEmit` 0 chyb. `pnpm build` ✅.
 
-**v10.1 — Vizualizace trasy na mapě:** Nový hook `hooks/useTripLayer.ts` spravuje Leaflet vrstvu pro aktivní výlet. Při změně `activeTripId` fetchuje `/api/trips/[id]/waypoints` a vykreslí polyline (oranžová, dasharray) + circle markery. Re-fetchuje také při změně `waypointStatus`. Klik na waypoint marker → `setSelectedPeak()` pokud má `locationId` v `locationIdToPeak` mapě. `tripLayerRef` a `locationIdToPeak` přidány do `app/page.tsx`.
+**v10.1 — Vizualizace trasy:** `hooks/useTripLayer.ts` — polyline (oranžová, dasharray) + circle markery. Klik → `setSelectedPeak()`.
 
-**v10.3 — Přejmenování výletu:** `updateTrip(id, userId, patch)` a `getTripById(id, userId)` přidány do `lib/db/trips-repository.ts`. `PATCH /api/trips/[id]` — auth-guard + ownership check přes userId v WHERE clause. `renameTrip(id, name)` v `hooks/useTrips.ts`. `TripPanel.tsx` — dvojklik na název → inline Input, blur/Enter potvrdí, Escape zruší.
+**v10.3 — Přejmenování výletu:** `updateTrip`, `getTripById`. `PATCH /api/trips/[id]` — ownership check. Inline edit (dvojklik → Input, blur/Enter/Escape).
 
-**v10.2 — GPX export:** `GET /api/trips/[id]/export` — auth-guard, ownership check přes `getTripById`. GPX generace čistou string interpolací, XML escape přes lokální `escapeXml()`. `TripPanel.tsx` — tlačítko "Exportovat GPX" jako `<a download>` obal.
+**v10.2 — GPX export:** `GET /api/trips/[id]/export` — string interpolace, `escapeXml()`, `<a download>`.
 
-**Odchylky:** `export/route.ts` má 42 řádků (limit 40) — přidán `escapeXml()` helper pro bezpečnost XML výstupu. Waypoint click handler nevolá `e.stopPropagation()` (Leaflet events nemají standardní DOM API) — nevadí.
-
----
-
-## v9.7 — Perzistence výběru oblastí + UX vylepšení filtru (plný záznam — přesunuto z RELEASE_NOTES.md 2026-04-22)
-
-> Datum: 2026-04-22 | Branch: main | Verze: v9.7
-
-### Status: ✅ Success
-
-| Soubor | Operace | Řádky (wc -l) | Limit |
-|---|---|---|---|
-| `app/page.tsx` | MODIFY | 232 | — (orchestrátor) |
-| `components/PeaksSidebar.tsx` | MODIFY | 205 | — (UI komponenta) |
-
-**Technical Audit:** `pnpm tsc --noEmit` 0 chyb. `pnpm build` ✅ — 29 routes. `pnpm drizzle-kit push` není potřeba — žádná změna DB schématu.
-
-**Perzistence výběru oblastí:** `selectedAreaSlugs` persistováno do `localStorage["hory-area-filter"]` přes dedikovaný `useEffect`. Při inicializaci načítá slugy z localStorage s validací (Array.isArray + typeof === "string"). Druhý `useEffect` sanitizuje stav po načtení `dbAreas` — odstraní slugy, které v DB již neexistují (ochrana před obsoletními hodnotami). Vzor analogický k `hory-basemap` v `UserSettingsPanel.tsx`.
-
-**Tlačítko "Zobrazit vše":** Nový prop `onClearAreaFilter: () => void` v `PeaksSidebarProps`. Podmíněně renderovaný button s ikonou `X` (Lucide) uvnitř FilterSection "Oblasti DB". Viditelný pouze pokud `selectedAreaSlugs.length > 0`. Volá `handleClearAreaFilter()` v orchestrátoru → `setSelectedAreaSlugs([])`.
-
-**Počet viditelných vrcholů:** Nový prop `filteredCount: number` předán z `app/page.tsx` (délka `areaFilteredPoints`). Zobrazen jako badge nad vyhledávacím polem. Formát: label "Vrcholy" + číslo ve `rounded-full bg-zinc-100` badge.
-
-**Odchylky:** Žádné. Všechna akceptační kritéria splněna.
+**Odchylky:** `export/route.ts` 42 ř. (limit 40) — escapeXml helper nutný.
 
 ---
 
-## v9.6 — Filtrování vrcholů podle oblasti v UI (plný záznam — přesunuto z RELEASE_NOTES.md 2026-04-22)
-
-> Datum: 2026-04-22 | Branch: main | Verze: v9.6
-
-### Status: ✅ Success
-
-| Soubor | Operace | Řádky (wc -l) | Limit |
-|---|---|---|---|
-| `app/api/areas/route.ts` | CREATE | 28 | 50 |
-| `lib/db/locations-area-repository.ts` | CREATE | 27 | 60 |
-| `hooks/useAreas.ts` | CREATE | 16 | 25 |
-| `lib/types.ts` | MODIFY | 11 | — |
-| `app/api/peaks/route.ts` | MODIFY | 37 | 50 |
-| `hooks/useDataFetching.ts` | MODIFY | 228 | 120 (kompoziční výjimka) |
-| `components/PeaksSidebar.tsx` | MODIFY | 190 | — (UI komponenta) |
-| `app/page.tsx` | MODIFY | 205 | — (orchestrátor) |
-
-**Technical Audit:** `pnpm tsc --noEmit` 0 chyb. `pnpm build` ✅ — 29 routes. `pnpm drizzle-kit push` není potřeba — žádná změna DB schématu.
-
-**Backend:** `GET /api/areas` — veřejný endpoint, vyhledává modul `mountains` dle slug, vrací `{ areas: AreaRow[] }`. `lib/db/locations-area-repository.ts` — `getLocationsByArea(moduleId, areaSlug)` (server-side filtr, pro budoucí použití) + `getLocationAreaSlugsMap(moduleId)` (JOIN `location_areas`+`areas`, vrací `Map<locationId, slug[]>`). `GET /api/peaks` rozšířen — volá `getLocationAreaSlugsMap` paralelně s `getAllLocations`, přiřazuje `areaSlugs: string[]` ke každé lokaci.
-
-**Frontend:** `MapPoint` typ rozšířen o `areaSlugs?: string[]`. `hooks/useAreas.ts` — SWR getter hook bez write operací (vzor z v9.1). `app/page.tsx` — `selectedAreaSlugs: string[]` state, `useAreas()` hook, `areaFilteredPoints` (useMemo, client-side OR filtr), `handleToggleAreaSlug` helper. `areaFilteredPoints` předán do `useChallenges` jako `allPoints`. `PeaksSidebar.tsx` — nový `FilterSection` s id `db-areas`, checkboxy oblastí z DB, renderuje se pouze pokud `dbAreas.length > 0`.
-
-**Odchylky:** Žádné. Client-side filtr dle doporučení architekta. `areaSlugs` vloženy do `/api/peaks` odpovědi (eliminuje extra round-trip).
-
----
-
-> Starší verze (V1–V26a, TD-cleanup, v8.5, v8.6, v8.6.1, v8.7, TD-build, v9.1, v9.2, v9.3, v9.4, v9.5, TD-orphan, TD-schema-uc, Fáze 9.4) jsou trvale archivovány. Archiv udržuje pouze posledních 5 verzí.
+> Starší verze (V1–V26a, TD-cleanup, v8.5, v8.6, v8.6.1, v8.7, TD-build, v9.1–v9.7, TD-orphan, TD-schema-uc, Fáze 9.4) jsou trvale archivovány. Archiv udržuje pouze posledních 5 verzí.

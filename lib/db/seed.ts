@@ -23,8 +23,23 @@ export async function seedModules() {
       countryCode: "cz",
     },
   }).onConflictDoNothing();
+
+  const [castlesModule] = await db.insert(modules).values({
+    slug: "castles",
+    name: "Zámky",
+    icon: "castle",
+    description: "Hrady a zámky z OSM Overpass (ODbL).",
+  }).onConflictDoUpdate({ target: modules.slug, set: { name: "Zámky" } }).returning();
+
+  await db.insert(locationTypes).values({
+    moduleId: castlesModule.id,
+    slug: "castle",
+    name: "Hrad / Zámek",
+  }).onConflictDoNothing();
 }
 
-seedModules()
-  .then(() => { console.log("Seed dokončen."); process.exit(0); })
-  .catch((err) => { console.error("Seed selhal:", err); process.exit(1); });
+if (require.main === module) {
+  seedModules()
+    .then(() => { console.log("Seed dokončen."); process.exit(0); })
+    .catch((err) => { console.error("Seed selhal:", err); process.exit(1); });
+}

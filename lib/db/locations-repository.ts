@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { locations } from "./schema";
+import { locations, locationTypes } from "./schema";
 import { eq, sql } from "drizzle-orm";
 import type { InferSelectModel } from "drizzle-orm";
 
@@ -11,6 +11,13 @@ export async function getAllLocations(limit = 20000): Promise<Location[]> {
 
 export async function getLocationsByCountry(countryCode: string): Promise<Location[]> {
   return db.select().from(locations).where(eq(locations.countryCode, countryCode));
+}
+
+export async function getAllLocationsByModule(moduleId: number, limit = 20000): Promise<Location[]> {
+  const rows = await db.select().from(locations)
+    .innerJoin(locationTypes, eq(locationTypes.id, locations.typeId))
+    .where(eq(locationTypes.moduleId, moduleId)).limit(limit);
+  return rows.map((r) => r.locations);
 }
 
 export type UpsertedLocation = { id: number; lat: number; lon: number };
