@@ -1,7 +1,11 @@
 import { z } from "zod";
 import type { CastleLocation } from "./CastlesParserService";
 
-const OVERPASS_ENDPOINT = "https://overpass-api.de/api/interpreter";
+const OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.openstreetmap.ru/api/interpreter",
+];
 const TIMEOUT_MS = 60_000;
 
 const OVERPASS_QUERY = `
@@ -48,24 +52,38 @@ function toExternalId(el: OverpassElement): string {
   return `${el.type}/${el.id}`;
 }
 
+async function fetchOverpass(query: string): Promise<string> {
+  let lastError: Error | null = null;
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (attempt > 0) await new Promise((r) => setTimeout(r, 8_000));
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+      try {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `data=${encodeURIComponent(query)}`,
+          signal: controller.signal,
+        });
+        clearTimeout(timer);
+        if (res.ok) return res.text();
+        lastError = new Error(`Overpass ${endpoint} error: ${res.status}`);
+        console.warn(`[castles-scraper] ${lastError.message}`);
+        if (res.status !== 429 && res.status !== 406 && res.status !== 504) break;
+      } catch (err) {
+        clearTimeout(timer);
+        lastError = err as Error;
+        console.warn(`[castles-scraper] ${endpoint} failed: ${lastError.message}`);
+      }
+    }
+  }
+  throw lastError ?? new Error("Overpass API: všechny endpointy selhaly");
+}
+
 export class CastlesScraperService {
   async scrape(): Promise<CastleLocation[]> {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-    let responseText: string;
-    try {
-      const res = await fetch(OVERPASS_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: `data=${encodeURIComponent(OVERPASS_QUERY)}`,
-        signal: controller.signal,
-      });
-      if (!res.ok) throw new Error(`Overpass API error: ${res.status}`);
-      responseText = await res.text();
-    } finally {
-      clearTimeout(timer);
-    }
+    const responseText = await fetchOverpass(OVERPASS_QUERY);
 
     const parsed: unknown = JSON.parse(responseText);
     const { elements } = OverpassResponseSchema.parse(parsed);
