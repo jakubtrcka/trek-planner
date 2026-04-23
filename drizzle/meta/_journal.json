@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1776200338081,
-      "tag": "0000_greedy_the_leader",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1776200893262,
-      "tag": "0001_cloudy_odin",
+      "when": 1776954625491,
+      "tag": "0000_nosy_raider",
       "breakpoints": true
     }
   ]
