@@ -17,11 +17,15 @@ async function run() {
     } catch (err) {
       lastError = err;
       const delay = attempt * 2000;
-      console.warn(`[db-startup] Pokus ${attempt}/5 selhal, retry za ${delay / 1000}s:`, (err as Error).message);
+      const cause = (err as any)?.cause;
+      console.warn(`[db-startup] Pokus ${attempt}/5 selhal:`, (err as Error).message);
+      if (cause) console.warn("  Příčina:", cause.message ?? cause);
       if (attempt < 5) await new Promise((r) => setTimeout(r, delay));
     }
   }
+  const cause = (lastError as any)?.cause;
   console.error("[db-startup] Všechny pokusy selhaly:", (lastError as Error).message);
+  if (cause) console.error("  Příčina:", cause.message ?? cause);
   process.exit(1);
 }
 
