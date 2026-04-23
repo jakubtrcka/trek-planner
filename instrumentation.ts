@@ -1,19 +1,36 @@
+import path from "path";
+
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
   const { migrate } = await import("drizzle-orm/node-postgres/migrator");
   const { db } = await import("./lib/db/index");
-
-  await migrate(db, { migrationsFolder: "drizzle" });
-  console.log("[startup] Migrace hotové.");
-
   const { seedModules } = await import("./lib/db/seed");
-  await seedModules();
-  console.log("[startup] Seed hotový.");
 
-  syncCastlesIfEmpty().catch((err) =>
-    console.error("[startup] Auto-sync zámků selhal:", err)
-  );
+  const migrationsFolder = path.join(process.cwd(), "drizzle");
+
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    try {
+      await migrate(db, { migrationsFolder });
+      console.log("[startup] Migrace hotové.");
+      await seedModules();
+      console.log("[startup] Seed hotový.");
+      syncCastlesIfEmpty().catch((err) =>
+        console.error("[startup] Auto-sync zámků selhal:", err)
+      );
+      return;
+    } catch (err) {
+      lastError = err;
+      if (attempt < 5) {
+        const delay = attempt * 2000;
+        console.warn(`[startup] DB pokus ${attempt}/5 selhal, retry za ${delay / 1000}s:`, (err as Error).message);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  console.error("[startup] Migrace selhaly po 5 pokusech — server pokračuje bez nich:", (lastError as Error).message);
 }
 
 async function syncCastlesIfEmpty() {
