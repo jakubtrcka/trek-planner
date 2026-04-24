@@ -5,21 +5,27 @@ import { z } from "zod";
 import { auth } from "../../../../lib/auth";
 import { isAdmin } from "../../../../lib/db/admin";
 import { db } from "../../../../lib/db/index";
-import { dataSources, locationTypes, modules } from "../../../../lib/db/schema";
+import { dataSources, modules } from "../../../../lib/db/schema";
 import { encrypt, decrypt } from "../../../../lib/crypto";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 async function getMountainsDataSource() {
+  const [mod] = await db.select({ id: modules.id }).from(modules).where(eq(modules.slug, "mountains")).limit(1);
+  if (!mod) return null;
+
   const [row] = await db
     .select({ id: dataSources.id, config: dataSources.config })
     .from(dataSources)
-    .innerJoin(locationTypes, eq(locationTypes.moduleId, dataSources.moduleId))
-    .innerJoin(modules, eq(modules.id, dataSources.moduleId))
-    .where(and(eq(modules.slug, "mountains"), eq(dataSources.type, "scraper")))
+    .where(and(eq(dataSources.moduleId, mod.id), eq(dataSources.type, "scraper")))
     .limit(1);
-  return row ?? null;
+
+  if (row) return row;
+
+  // Záznam neexistuje — vytvoř ho
+  const [created] = await db.insert(dataSources).values({ moduleId: mod.id, type: "scraper", config: {} }).returning();
+  return created ?? null;
 }
 
 export async function GET() {
