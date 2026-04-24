@@ -77,7 +77,9 @@ export const dataSources = pgTable("data_sources", {
   config: jsonb("config"),
   lastSyncedAt: timestamp("last_synced_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => [
+  uniqueIndex("data_sources_module_type_idx").on(table.moduleId, table.type),
+]);
 
 // ── Lokality ──────────────────────────────────────────────────────────────────
 

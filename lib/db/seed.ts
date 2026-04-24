@@ -25,7 +25,7 @@ export async function seedModules() {
       targetUrl: "https://cs.hory.app/country/czech-republic",
       countryCode: "cz",
     },
-  }).onConflictDoNothing();
+  }).onConflictDoNothing({ target: [dataSources.moduleId, dataSources.type] });
 
   const [castlesModule] = await db.insert(modules).values({
     slug: "castles",
