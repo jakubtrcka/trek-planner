@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "pnpm exec playwright install chromium && next start",
+    "start": "next start",
     "lint": "next lint",
     "inspect:map": "node scripts/inspect-map.mjs",
     "db:generate": "drizzle-kit generate",
