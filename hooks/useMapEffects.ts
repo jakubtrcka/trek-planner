@@ -124,6 +124,9 @@ export function useMapEffects({
     }
     function renderMarkers() {
       peakMarkersRef.current.clear(); group.clearLayers();
+      if (!showCastles && castlePoints.length > 0) {
+        console.log("[map] showCastles=false, přeskakuji", castlePoints.length, "zámků");
+      }
       const zoom = areaSelectMapRef.current?.getZoom() ?? 8;
       const b = areaSelectMapRef.current?.getBounds();
       const bounds = b ? { west: b.getWest(), south: b.getSouth(), east: b.getEast(), north: b.getNorth() } : { west: 12, south: 49, east: 19, north: 51 };
@@ -163,7 +166,7 @@ export function useMapEffects({
     renderMarkers();
     areaSelectMapRef.current?.off("zoomend"); areaSelectMapRef.current?.on("zoomend", renderMarkers); areaSelectMapRef.current?.on("moveend", renderMarkers);
     return () => { areaSelectMapRef.current?.off("zoomend", renderMarkers); areaSelectMapRef.current?.off("moveend", renderMarkers); };
-  }, [mapReady, modulePoints, castlePoints, showCastles, selectedLetterColorMap, userAscents]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [mapReady, modulePoints, castlePoints, showCastles, selectedLetterColorMap, userAscents, activeModule]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Pan to selected peak
   useEffect(() => {
