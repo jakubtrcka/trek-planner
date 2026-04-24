@@ -70,12 +70,6 @@ export class CastlesParserService {
     this.geojsonPath = geojsonPath ?? path.resolve(process.cwd(), "export.geojson");
   }
 
-  /** Parse pre-fetched CastleLocation array (from CastlesScraperService). */
-  parseRaw(input: CastleLocation[]): CastleLocation[] {
-    return input.filter((c) => !!c.name && Number.isFinite(c.lat) && Number.isFinite(c.lon));
-  }
-
-  /** Parse from local GeoJSON file (dev/legacy path). */
   parse(): CastleLocation[] {
     const raw = fs.readFileSync(this.geojsonPath, "utf-8");
     const parsed: unknown = JSON.parse(raw);
