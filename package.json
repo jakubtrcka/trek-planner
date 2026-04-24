@@ -9,7 +9,7 @@
     "lint": "next lint",
     "inspect:map": "node scripts/inspect-map.mjs",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx scripts/db-startup.ts",
+    "db:migrate": "tsx scripts/db-migrate.ts",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
