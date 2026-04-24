@@ -60,13 +60,11 @@ async function syncCastles(moduleId: number) {
     return;
   }
 
-  console.log("[castles] Spouštím auto-sync z Overpassu...");
-  const { CastlesScraperService } = await import("../../../providers/castles/CastlesScraperService");
+  console.log("[castles] Spouštím auto-sync z export.geojson...");
   const { CastlesParserService } = await import("../../../providers/castles/CastlesParserService");
   const { upsertLocations } = await import("../../../lib/db/locations-repository");
 
-  const rawCastles = await new CastlesScraperService().scrape();
-  const castles = new CastlesParserService().parseRaw(rawCastles);
+  const castles = new CastlesParserService().parse();
   const mapped = castles.map((c) => ({
     name: c.name,
     lat: c.lat,

@@ -1,7 +1,6 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { auth } from "../../../lib/auth";
-import { CastlesScraperService } from "../../../providers/castles/CastlesScraperService";
 import { CastlesParserService } from "../../../providers/castles/CastlesParserService";
 import { upsertLocations } from "../../../lib/db/locations-repository";
 import { db } from "../../../lib/db/index";
@@ -31,10 +30,8 @@ export async function POST() {
       return NextResponse.json({ error: "Modul 'castles' nebyl nalezen. Spusť seed." }, { status: 500 });
     }
 
-    const scraper = new CastlesScraperService();
     const parser = new CastlesParserService();
-    const rawCastles = await scraper.scrape();
-    const castles = parser.parseRaw(rawCastles);
+    const castles = parser.parse();
 
     const mapped = castles.map((c) => ({
       name: c.name,
