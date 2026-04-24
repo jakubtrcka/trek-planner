@@ -1,6 +1,6 @@
 import { db } from "./index";
 import { locations, locationTypes } from "./schema";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { InferSelectModel } from "drizzle-orm";
 
 export type Location = InferSelectModel<typeof locations>;
@@ -17,6 +17,14 @@ export async function getAllLocationsByModule(moduleId: number, limit = 20000): 
   const rows = await db.select().from(locations)
     .innerJoin(locationTypes, eq(locationTypes.id, locations.typeId))
     .where(eq(locationTypes.moduleId, moduleId)).limit(limit);
+  return rows.map((r) => r.locations);
+}
+
+export async function getLocationsByModuleAndCountry(moduleId: number, countryCode: string, limit = 20000): Promise<Location[]> {
+  const rows = await db.select().from(locations)
+    .innerJoin(locationTypes, eq(locationTypes.id, locations.typeId))
+    .where(and(eq(locationTypes.moduleId, moduleId), eq(locations.countryCode, countryCode)))
+    .limit(limit);
   return rows.map((r) => r.locations);
 }
 

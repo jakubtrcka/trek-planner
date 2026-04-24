@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAllLocations, getLocationsByCountry } from "../../../lib/db/locations-repository";
+import { getAllLocationsByModule, getLocationsByModuleAndCountry } from "../../../lib/db/locations-repository";
 import { getLocationAreaSlugsMap } from "../../../lib/db/locations-area-repository";
 import { db } from "../../../lib/db/index";
 import { modules } from "../../../lib/db/schema";
@@ -19,9 +19,11 @@ export async function GET(request: Request) {
       .where(eq(modules.slug, "mountains"))
       .limit(1);
 
+    if (!mod) return NextResponse.json({ locations: [], count: 0 });
+
     const [rawLocations, areaSlugsMap] = await Promise.all([
-      countryCode ? getLocationsByCountry(countryCode) : getAllLocations(),
-      mod ? getLocationAreaSlugsMap(mod.id) : Promise.resolve(new Map<number, string[]>()),
+      countryCode ? getLocationsByModuleAndCountry(mod.id, countryCode) : getAllLocationsByModule(mod.id),
+      getLocationAreaSlugsMap(mod.id),
     ]);
 
     const locations = rawLocations.map((loc) => ({
