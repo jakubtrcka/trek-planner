@@ -4,31 +4,23 @@ import Link from "next/link";
 import { auth } from "../../../lib/auth";
 import { isAdmin } from "../../../lib/db/admin";
 import { AdminPanel } from "../../../components/AdminPanel";
-import { UserSettingsPanel } from "../../../components/UserSettingsPanel";
 
 export default async function AdminPage() {
   const session = await auth.api.getSession({ headers: await headers() });
 
-  if (!session) {
-    redirect("/");
-  }
+  if (!session) redirect("/");
 
   const admin = await isAdmin(session.user.id);
+  if (!admin) redirect("/");
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-start bg-zinc-50 p-8">
       <div className="w-full max-w-md">
         <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">Nastavení</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">Admin</h1>
           <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-900">← Zpět na mapu</Link>
         </div>
-        <UserSettingsPanel />
-        {admin && (
-          <div className="mt-8">
-            <p className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-zinc-400">Admin</p>
-            <AdminPanel />
-          </div>
-        )}
+        <AdminPanel />
       </div>
     </main>
   );
