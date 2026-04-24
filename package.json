@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "pnpm exec playwright install --with-deps chromium && next build",
     "start": "next start",
     "lint": "next lint",
     "inspect:map": "node scripts/inspect-map.mjs",
