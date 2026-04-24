@@ -123,7 +123,10 @@ export default function HomePage() {
   const [selectedCastle, setSelectedCastle] = useState<CastlePoint | null>(null);
   const [showCastlesLayer, setShowCastlesLayer] = useState(true);
   const [filterCastlesByMapBounds, setFilterCastlesByMapBounds] = useState(true);
-  useEffect(() => { if (activeModule === "zamky") setShowCastlesLayer(true); }, [activeModule]);
+  useEffect(() => {
+    if (activeModule === "zamky") setShowCastlesLayer(true);
+    else setSelectedCastle(null);
+  }, [activeModule]);
 
   // ─── Domain hooks ─────────────────────────────────────────────────────────
   const fetch$ = useDataFetching({ userAscents, mutateAscents, setActiveSection });
