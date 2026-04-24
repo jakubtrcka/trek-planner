@@ -1,6 +1,50 @@
 # RELEASE_NOTES — [[ai-docs/CODER|Coder]] výstup pro [[ai-docs/ARCHITECT|Architekta]]
 > Datum: 2026-04-24 | Branch: main | Autor: Claude Sonnet 4.6 (claude-sonnet-4-6)
-> Verze: v16-deploy
+> Verze: v16-deploy + v16b-bugfix
+
+---
+
+## v16b-bugfix — Oprava smíchání dat peaks/castles, 504 sync, admin polling
+
+> **Poznámka:** Přímé opravy Claudem mimo standardní agent workflow — produkční bugfixy navazující na v16-deploy.
+
+### Status: ✅
+
+### Files Changed
+
+| Soubor | Operace | Popis |
+|---|---|---|
+| `lib/db/locations-repository.ts` | UPDATE | Nová `getLocationsByModuleAndCountry()` s JOIN na `location_types` |
+| `app/api/peaks/route.ts` | UPDATE | Filtruje přes modul mountains (ne všechny lokality) |
+| `app/api/sync-peaks/route.ts` | UPDATE | Fire-and-forget: vrátí 202 okamžitě, Playwright běží na pozadí |
+| `components/AdminPanel.tsx` | UPDATE | Polling `/api/peaks` každých 10s, přepne z „Běží…" na „OK" po dokončení |
+| `app/page.tsx` | UPDATE | Clear `selectedCastle` při přepnutí modulu |
+| `hooks/useMapEffects.ts` | UPDATE | `activeModule` přidán do deps clusterovacího efektu + diagnostický log |
+
+### Problémy a řešení
+
+#### 10. Zámky zobrazeny v modulu Hory — data smíchána v DB
+`getAllLocations()` vracela **všechny lokality bez ohledu na modul** — peaks i castles dohromady. API `/api/peaks` tedy posílalo i zámky, které se renderovaly jako vrcholy v hory modulu.
+
+**Příčina:** `getAllLocations()` dělá `SELECT * FROM locations` bez JOIN na `location_types`. Castles i peaks sdílí stejnou tabulku `locations`, odlišují se jen přes `type_id → location_types → module_id`.
+
+**Řešení:** Nová funkce `getLocationsByModuleAndCountry(moduleId, countryCode)` joinuje přes `location_types`. `/api/peaks` nyní vždy filtruje podle modulu `mountains` — vrací výhradně vrcholy.
+
+#### 11. 504 Gateway Timeout na sync vrcholů
+Playwright scraper na `/api/sync-peaks` trvá 60–120 sekund. DO App Platform gateway timeout je ~30s → 504.
+
+**Řešení:** Endpoint vrátí `202 { status: "started" }` okamžitě. Playwright scrape běží jako fire-and-forget (`runSync().catch(...)`) v procesu serveru (DO App Platform běží jako persistent container, ne serverless). Výsledek loguje: `[sync-peaks] Hotovo: XXXX vrcholů`.
+
+**AdminPanel:** Při `202` zobrazí „Běží…" a každých 10 sekund polluje `/api/peaks?country=cz`. Jakmile počet lokací vzroste, přepne na „OK". Polling se zastaví při přechodu ze stavu `background`.
+
+#### 12. Zámkový detail viditelný v modulu Hory — stale state
+`selectedCastle` state přežíval přepnutí modulu. Podmínka `activeModule !== "zamky"` na floating overlay znamenala, že vybraný zámek ze zamky session se zobrazoval jako overlay na mapě v hory modulu.
+
+**Řešení:** `useEffect` při změně `activeModule` volá `setSelectedCastle(null)` (pokud nový modul není `zamky`).
+
+### Technical Audit
+
+- **pnpm tsc --noEmit:** ✅ čisté
 
 ---
 
