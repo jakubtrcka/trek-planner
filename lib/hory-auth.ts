@@ -1,36 +1,25 @@
-export function getStoredHoryCredentials() {
-  const username =
-    process.env.HORY_USERNAME?.trim() ||
-    process.env.HORY_LOGIN?.trim() ||
-    process.env.HORY_EMAIL?.trim() ||
-    "";
-  const password = process.env.HORY_PASSWORD || "";
+import { eq, and } from "drizzle-orm";
+import { db } from "./db/index";
+import { dataSources, modules } from "./db/schema";
+import { decrypt } from "./crypto";
 
-  return {
-    username,
-    password,
-    hasCredentials: Boolean(username && password)
-  };
+export async function getAdminHoryCredentials(): Promise<{ username: string; password: string; hasCredentials: boolean }> {
+  const [row] = await db
+    .select({ config: dataSources.config })
+    .from(dataSources)
+    .innerJoin(modules, eq(modules.id, dataSources.moduleId))
+    .where(and(eq(modules.slug, "mountains"), eq(dataSources.type, "scraper")))
+    .limit(1);
+
+  const config = (row?.config ?? {}) as Record<string, string>;
+  const username = config.horyUsername ? decrypt(config.horyUsername) : "";
+  const password = config.horyPassword ? decrypt(config.horyPassword) : "";
+  return { username, password, hasCredentials: Boolean(username && password) };
 }
 
 export function resolveHoryCredentials(username?: string, password?: string) {
-  const providedUsername = username?.trim() || "";
-  const providedPassword = password || "";
-
-  if (providedUsername && providedPassword) {
-    return {
-      username: providedUsername,
-      password: providedPassword,
-      fromEnv: false,
-      hasCredentials: true
-    };
-  }
-
-  const stored = getStoredHoryCredentials();
-  return {
-    username: stored.username,
-    password: stored.password,
-    fromEnv: stored.hasCredentials,
-    hasCredentials: stored.hasCredentials
-  };
+  const u = username?.trim() || "";
+  const p = password || "";
+  if (u && p) return { username: u, password: p, hasCredentials: true };
+  return { username: "", password: "", hasCredentials: false };
 }

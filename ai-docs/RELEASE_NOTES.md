@@ -1,6 +1,35 @@
 # RELEASE_NOTES — [[ai-docs/CODER|Coder]] výstup pro [[ai-docs/ARCHITECT|Architekta]]
 > Datum: 2026-04-24 | Branch: main | Autor: Claude Sonnet 4.6 (claude-sonnet-4-6)
-> Verze: v16-deploy + v16b-bugfix
+> Verze: v16-deploy + v16b-bugfix + v16c-admin-credentials
+
+---
+
+## v16c-admin-credentials — Globální admin přihlašovací údaje Hory.app v DB
+
+### Status: ✅
+
+### Files Changed
+
+| Soubor | Operace | Popis |
+|---|---|---|
+| `app/api/admin/hory-credentials/route.ts` | CREATE | GET/POST endpoint — čte/zapisuje Hory.app credentials do `data_sources.config` (šifrovaně), admin-only |
+| `lib/hory-auth.ts` | REWRITE | `getAdminHoryCredentials()` — async, čte z DB (`data_sources.config`); `resolveHoryCredentials()` zachován pro explicitní předání |
+| `app/api/sync-peaks/route.ts` | UPDATE | Používá `getAdminHoryCredentials()` místo env; přidán admin auth check |
+| `app/api/sync-areas/route.ts` | UPDATE | Používá `getAdminHoryCredentials()` místo env; odstraněn starý import |
+| `components/AdminPanel.tsx` | UPDATE | Přidán formulář `HoryCredentialsForm` — načte existující credentials z DB, uloží přes POST |
+
+### Problém a řešení
+
+#### 13. Admin sync vrcholů používal soukromé uživatelské credentials
+`sync-peaks` a `sync-areas` původně četly Hory.app přihlašovací údaje z env proměnných (`HORY_USERNAME`, `HORY_PASSWORD`). Ty byly sdíleny se standardní uživatelskou session — admin operace (scraping veřejných vrcholů do DB) tak závisela na soukromých údajích konkrétního uživatele.
+
+**Příčina:** Credentials nebyly architektonicky odděleny — jedno místo pro uživatelský login i admin sync.
+
+**Řešení:** Globální admin credentials jsou uloženy v `data_sources.config` (JSONB, šifrováno přes `lib/crypto.ts`) a vázány na modul `mountains` + type `scraper`. Admin je zadá jednou přes formulář v AdminPanelu — odděleně od uživatelských nastavení v UserSettingsPanel. `getAdminHoryCredentials()` je nyní async a čte výhradně z DB.
+
+### Technical Audit
+
+- **pnpm tsc --noEmit:** ✅ čisté
 
 ---
 

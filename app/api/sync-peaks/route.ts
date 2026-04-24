@@ -3,7 +3,10 @@ import { z } from "zod";
 import { HoryScraperService } from "../../../providers/hory/HoryScraperService";
 import { upsertLocations } from "../../../lib/db/locations-repository";
 import { linkLocationBySlug } from "../../../lib/db/areas-repository";
-import { resolveHoryCredentials } from "../../../lib/hory-auth";
+import { getAdminHoryCredentials } from "../../../lib/hory-auth";
+import { isAdmin } from "../../../lib/db/admin";
+import { auth } from "../../../lib/auth";
+import { headers } from "next/headers";
 import { db } from "../../../lib/db/index";
 import { locationTypes, modules } from "../../../lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -23,7 +26,8 @@ async function runSync(countryCode: string) {
 
   if (!locType) throw new Error("Modul 'mountains' nebyl nalezen. Spusť seed.");
 
-  const credentials = resolveHoryCredentials();
+  const credentials = await getAdminHoryCredentials();
+  if (!credentials.hasCredentials) throw new Error("Hory.app přihlašovací údaje nejsou nastaveny. Vyplň je v Admin panelu.");
   const service = new HoryScraperService(credentials);
   const { points } = await service.scrapeMapPoints({
     targetUrl: process.env.HORY_TARGET_URL ?? "https://cs.hory.app/country/czech-republic",
@@ -74,6 +78,11 @@ async function runSync(countryCode: string) {
 }
 
 export async function POST(request: Request) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session || !await isAdmin(session.user.id)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   if (syncRunning) {
     return NextResponse.json({ status: "already_running" }, { status: 202 });
   }

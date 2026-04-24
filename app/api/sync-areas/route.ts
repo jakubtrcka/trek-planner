@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { auth } from "../../../lib/auth";
 import { HoryScraperService } from "../../../providers/hory/HoryScraperService";
-import { resolveHoryCredentials } from "../../../lib/hory-auth";
+import { getAdminHoryCredentials } from "../../../lib/hory-auth";
 import { db } from "../../../lib/db/index";
 import { modules } from "../../../lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -28,7 +28,8 @@ export async function POST() {
   const [mod] = await db.select({ id: modules.id }).from(modules).where(eq(modules.slug, "mountains")).limit(1);
   if (!mod) return Response.json({ error: "Modul 'mountains' nenalezen. Spusť seed." }, { status: 500 });
 
-  const credentials = resolveHoryCredentials();
+  const credentials = await getAdminHoryCredentials();
+  if (!credentials.hasCredentials) return Response.json({ error: "Hory.app přihlašovací údaje nejsou nastaveny. Vyplň je v Admin panelu." }, { status: 400 });
   const service = new HoryScraperService(credentials);
 
   try {

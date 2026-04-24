@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Loader2, Mountain, Trophy, MapPinned, Castle } from "lucide-react";
 import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 
 type ButtonState = "idle" | "loading" | "success" | "background" | "error";
 type ActionKey = "peaks" | "challenges" | "areas" | "castles";
@@ -18,6 +20,83 @@ async function callEndpoint(url: string): Promise<"done" | "background"> {
     throw new Error(body.error ?? `HTTP ${res.status}`);
   }
   return "done";
+}
+
+function HoryCredentialsForm() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [saveState, setSaveState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/hory-credentials")
+      .then((r) => r.json())
+      .then((data: { username: string | null; password: string | null }) => {
+        if (data.username) setUsername(data.username);
+        if (data.password) setPassword(data.password);
+      })
+      .catch(() => {});
+  }, []);
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    setSaveState("loading");
+    setSaveError(null);
+    try {
+      const res = await fetch("/api/admin/hory-credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(body.error ?? `HTTP ${res.status}`);
+      }
+      setSaveState("success");
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Neočekávaná chyba");
+      setSaveState("error");
+    }
+  }
+
+  return (
+    <form onSubmit={(e) => void handleSave(e)} className="space-y-2">
+      <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Hory.app přihlášení</p>
+      <div className="space-y-1">
+        <Label htmlFor="hory-username" className="text-xs">Uživatelské jméno</Label>
+        <Input
+          id="hory-username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          autoComplete="off"
+          className="h-8 text-sm rounded-xl"
+        />
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="hory-password" className="text-xs">Heslo</Label>
+        <Input
+          id="hory-password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="new-password"
+          className="h-8 text-sm rounded-xl"
+        />
+      </div>
+      <Button
+        type="submit"
+        variant="outline"
+        className="w-full justify-center rounded-2xl"
+        disabled={saveState === "loading" || !username || !password}
+      >
+        {saveState === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+        Uložit přihlašovací údaje
+        {saveState === "success" && <span className="ml-auto text-xs text-emerald-600">Uloženo</span>}
+        {saveState === "error" && <span className="ml-auto text-xs text-red-500">Chyba</span>}
+      </Button>
+      {saveError && <p className="text-xs text-red-500 px-1">{saveError}</p>}
+    </form>
+  );
 }
 
 export function AdminPanel() {
@@ -67,6 +146,8 @@ export function AdminPanel() {
 
   return (
     <div className="space-y-3">
+      <HoryCredentialsForm />
+      <hr className="border-zinc-200" />
       {actions.map(({ key, label, icon, url }) => {
         const s = states[key];
         const isDisabled = !url || s === "loading";
