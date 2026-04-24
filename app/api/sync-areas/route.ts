@@ -6,14 +6,10 @@ import { db } from "../../../lib/db/index";
 import { modules } from "../../../lib/db/schema";
 import { eq } from "drizzle-orm";
 import { upsertArea } from "../../../lib/db/areas-repository";
+import { isAdmin } from "../../../lib/db/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function isAdmin(email: string): boolean {
-  const adminEmails = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim()).filter(Boolean);
-  return adminEmails.includes(email);
-}
 
 function slugFromUrl(url: string): string {
   try {
@@ -27,7 +23,7 @@ function slugFromUrl(url: string): string {
 export async function POST() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
-  if (!isAdmin(session.user.email)) return Response.json({ error: "Forbidden" }, { status: 403 });
+  if (!await isAdmin(session.user.id)) return Response.json({ error: "Forbidden" }, { status: 403 });
 
   const [mod] = await db.select({ id: modules.id }).from(modules).where(eq(modules.slug, "mountains")).limit(1);
   if (!mod) return Response.json({ error: "Modul 'mountains' nenalezen. Spusť seed." }, { status: 500 });

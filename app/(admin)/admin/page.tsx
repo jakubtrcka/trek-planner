@@ -2,13 +2,9 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "../../../lib/auth";
+import { isAdmin } from "../../../lib/db/admin";
 import { AdminPanel } from "../../../components/AdminPanel";
 import { UserSettingsPanel } from "../../../components/UserSettingsPanel";
-
-function isAdmin(email: string): boolean {
-  const adminEmails = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim()).filter(Boolean);
-  return adminEmails.includes(email);
-}
 
 export default async function AdminPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -17,7 +13,7 @@ export default async function AdminPage() {
     redirect("/");
   }
 
-  const admin = isAdmin(session.user.email);
+  const admin = await isAdmin(session.user.id);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-start bg-zinc-50 p-8">

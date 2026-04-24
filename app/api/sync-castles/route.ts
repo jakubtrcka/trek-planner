@@ -6,15 +6,14 @@ import { upsertLocations } from "../../../lib/db/locations-repository";
 import { db } from "../../../lib/db/index";
 import { locationTypes, modules } from "../../../lib/db/schema";
 import { eq } from "drizzle-orm";
+import { isAdmin } from "../../../lib/db/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim()).filter(Boolean);
-
 export async function POST() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !ADMIN_EMAILS.includes(session.user.email)) {
+  if (!session || !await isAdmin(session.user.id)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
