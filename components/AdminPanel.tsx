@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Loader2, Mountain, Trophy, MapPinned, Castle } from "lucide-react";
 import { Button } from "./ui/button";
 
@@ -23,6 +23,28 @@ async function callEndpoint(url: string): Promise<"done" | "background"> {
 export function AdminPanel() {
   const [states, setStates] = useState<ActionStates>({ peaks: "idle", challenges: "idle", areas: "idle", castles: "idle" });
   const [errors, setErrors] = useState<ActionErrors>({});
+  const peaksCountRef = useRef<number | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (states.peaks !== "background") {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+      return;
+    }
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await fetch("/api/peaks?country=cz");
+        if (!res.ok) return;
+        const data = await res.json() as { count: number };
+        if (peaksCountRef.current === null) { peaksCountRef.current = data.count; return; }
+        if (data.count > peaksCountRef.current) {
+          setStates((prev) => ({ ...prev, peaks: "success" }));
+          peaksCountRef.current = null;
+        }
+      } catch { /* ignore */ }
+    }, 10_000);
+    return () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; } };
+  }, [states.peaks]);
 
   async function handleSync(key: ActionKey, url: string) {
     setStates((prev) => ({ ...prev, [key]: "loading" }));
