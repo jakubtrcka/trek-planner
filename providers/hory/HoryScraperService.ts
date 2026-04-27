@@ -682,166 +682,94 @@ export class HoryScraperService {
 
   private static async extractClientSidePoints(page: Page): Promise<HoryMapPoint[]> {
     const rawPoints = await page.evaluate(() => {
-      const out: Array<{
-        lat: number; lon: number; name?: string; peakName?: string;
-        altitude?: number | string; mountainLink?: string; source?: string;
-      }> = [];
+      const out: Array<{ lat: number; lon: number; name?: string; peakName?: string; altitude?: number | string; mountainLink?: string; source?: string }> = [];
 
-      const toNumber = (value: unknown): number | null => {
+      function toNumber(value: unknown): number | null {
         if (typeof value === "number") return Number.isFinite(value) ? value : null;
-        if (typeof value === "string") {
-          const n = Number(value);
-          return Number.isFinite(n) ? n : null;
-        }
+        if (typeof value === "string") { const n = Number(value); return Number.isFinite(n) ? n : null; }
         return null;
-      };
+      }
 
-      const add = (
-        lat: unknown,
-        lon: unknown,
-        name: unknown,
-        source: string,
-        extra?: { peakName?: unknown; altitude?: unknown; mountainLink?: unknown }
-      ) => {
+      function add(lat: unknown, lon: unknown, name: unknown, source: string, extra?: { peakName?: unknown; altitude?: unknown; mountainLink?: unknown }): void {
         const latNum = toNumber(lat);
         const lonNum = toNumber(lon);
         if (latNum === null || lonNum === null) return;
-        const peakName =
-          typeof extra?.peakName === "string"
-            ? extra.peakName
-            : typeof name === "string"
-              ? name
-              : undefined;
+        const peakName = typeof extra?.peakName === "string" ? extra.peakName : typeof name === "string" ? name : undefined;
         out.push({
-          lat: latNum,
-          lon: lonNum,
+          lat: latNum, lon: lonNum,
           name: typeof name === "string" ? name : undefined,
           peakName,
-          altitude:
-            typeof extra?.altitude === "number" || typeof extra?.altitude === "string"
-              ? extra.altitude
-              : undefined,
-          mountainLink:
-            typeof extra?.mountainLink === "string" ? extra.mountainLink : undefined,
+          altitude: typeof extra?.altitude === "number" || typeof extra?.altitude === "string" ? extra.altitude : undefined,
+          mountainLink: typeof extra?.mountainLink === "string" ? extra.mountainLink : undefined,
           source,
         });
-      };
+      }
 
-      const parseAttrNumber = (value: string | null): number | undefined => {
+      function parseAttrNumber(value: string | null): number | undefined {
         if (value === null) return undefined;
         const num = Number(value);
         return Number.isFinite(num) ? num : undefined;
-      };
+      }
 
-      const attrSelectors = [
-        "[data-lat][data-lng]",
-        "[data-latitude][data-longitude]",
-        "[data-lat][data-lon]",
-      ];
-
-      for (const selector of attrSelectors) {
-        const nodes = Array.from(document.querySelectorAll(selector));
-        for (const node of nodes) {
-          const element = node as HTMLElement;
-          const lat =
-            parseAttrNumber(element.getAttribute("data-lat")) ??
-            parseAttrNumber(element.getAttribute("data-latitude"));
-          const lon =
-            parseAttrNumber(element.getAttribute("data-lng")) ??
-            parseAttrNumber(element.getAttribute("data-lon")) ??
-            parseAttrNumber(element.getAttribute("data-longitude"));
-          const name =
-            element.getAttribute("title") ||
-            element.getAttribute("aria-label") ||
-            undefined;
-          add(lat, lon, name, "dom:data-attributes");
-        }
+      function looksInteresting(key: string): boolean {
+        return /(map|leaflet|marker|pin|feature|point|store|state|param)/i.test(key);
       }
 
       const visited = new WeakSet<object>();
-      const looksInteresting = (key: string) =>
-        /(map|leaflet|marker|pin|feature|point|store|state|param)/i.test(key);
 
-      const walk = (node: unknown, source: string, depth = 0) => {
+      function walk(node: unknown, source: string, depth = 0): void {
         if (depth > 7 || node === null || node === undefined) return;
-
         if (Array.isArray(node)) {
-          if (
-            node.length >= 2 &&
-            typeof node[0] === "number" &&
-            typeof node[1] === "number"
-          ) {
+          if (node.length >= 2 && typeof node[0] === "number" && typeof node[1] === "number") {
             add(node[1], node[0], undefined, source);
           }
-          for (const item of node) {
-            walk(item, source, depth + 1);
-          }
+          for (const item of node) walk(item, source, depth + 1);
           return;
         }
-
         if (typeof node !== "object") return;
-
         const obj = node as Record<string, unknown>;
         if (visited.has(obj)) return;
         visited.add(obj);
-
-        const lat = obj.lat ?? obj.latitude;
-        const lon = obj.lng ?? obj.lon ?? obj.longitude;
-        const name = obj.name ?? obj.title;
-        add(lat, lon, name, source);
-
+        add(obj.lat ?? obj.latitude, obj.lng ?? obj.lon ?? obj.longitude, obj.name ?? obj.title, source);
         for (const [key, value] of Object.entries(obj)) {
-          if (depth <= 1 || looksInteresting(key)) {
-            walk(value, `${source}.${key}`, depth + 1);
-          }
+          if (depth <= 1 || looksInteresting(key)) walk(value, `${source}.${key}`, depth + 1);
         }
-      };
+      }
+
+      const attrSelectors = ["[data-lat][data-lng]", "[data-latitude][data-longitude]", "[data-lat][data-lon]"];
+      for (const selector of attrSelectors) {
+        for (const el of Array.from(document.querySelectorAll(selector))) {
+          const element = el as HTMLElement;
+          const lat = parseAttrNumber(element.getAttribute("data-lat")) ?? parseAttrNumber(element.getAttribute("data-latitude"));
+          const lon = parseAttrNumber(element.getAttribute("data-lng")) ?? parseAttrNumber(element.getAttribute("data-lon")) ?? parseAttrNumber(element.getAttribute("data-longitude"));
+          add(lat, lon, element.getAttribute("title") || element.getAttribute("aria-label") || undefined, "dom:data-attributes");
+        }
+      }
 
       const win = window as unknown as Record<string, unknown>;
-
-      // hory.app stores map points in window.PARAMS.areaMountains and visits in window.PARAMS.mapVisits
-      const params = win.PARAMS as Record<string, unknown> | undefined;
+      const params = win["PARAMS"] as Record<string, unknown> | undefined;
       if (params) {
-        const areaMountains = params.areaMountains;
-        if (Array.isArray(areaMountains)) {
-          for (const item of areaMountains) {
+        if (Array.isArray(params["areaMountains"])) {
+          for (const item of params["areaMountains"] as Record<string, unknown>[]) {
             if (!item || typeof item !== "object") continue;
-            const obj = item as Record<string, unknown>;
-            add(obj.latitude, obj.longitude, obj.name, "window.PARAMS.areaMountains", {
-              peakName: obj.name,
-              altitude: obj.altitude,
-              mountainLink: obj.mountainLink,
-            });
+            add(item["latitude"], item["longitude"], item["name"], "window.PARAMS.areaMountains", { peakName: item["name"], altitude: item["altitude"], mountainLink: item["mountainLink"] });
           }
         }
-
-        const mapVisits = params.mapVisits;
-        if (Array.isArray(mapVisits)) {
-          for (const item of mapVisits) {
+        if (Array.isArray(params["mapVisits"])) {
+          for (const item of params["mapVisits"] as Record<string, unknown>[]) {
             if (!item || typeof item !== "object") continue;
-            const obj = item as Record<string, unknown>;
-            add(
-              obj.latitude,
-              obj.longitude,
-              obj.name ?? obj.userName,
-              "window.PARAMS.mapVisits"
-            );
+            add(item["latitude"], item["longitude"], item["name"] ?? item["userName"], "window.PARAMS.mapVisits");
           }
         }
-
-        const mountain = params.mountain;
-        if (mountain && typeof mountain === "object") {
-          const m = mountain as Record<string, unknown>;
-          add(m.latitude, m.longitude, m.name, "window.PARAMS.mountain");
+        if (params["mountain"] && typeof params["mountain"] === "object") {
+          const m = params["mountain"] as Record<string, unknown>;
+          add(m["latitude"], m["longitude"], m["name"], "window.PARAMS.mountain");
         }
-
         walk(params, "window.PARAMS", 0);
       }
 
       for (const [key, value] of Object.entries(win)) {
-        if (looksInteresting(key)) {
-          walk(value, `window.${key}`, 0);
-        }
+        if (looksInteresting(key)) walk(value, `window.${key}`, 0);
       }
 
       return out;
