@@ -92,10 +92,47 @@ UPDATE "user" SET role = 'admin' WHERE email = 'tvuj@email.cz';
 
 ---
 
+---
+
+## Příprava dat — zámky (OpenStreetMap)
+
+Zámky se načítají z manuálního GeoJSON exportu z OpenStreetMap, ne scraperem.
+
+### 1. Otevři Overpass Turbo
+
+Jdi na [overpass-turbo.eu](https://overpass-turbo.eu) a spusť:
+
+```
+[out:json][timeout:60];
+area["ISO3166-1"="CZ"]->.searchArea;
+(
+  node["historic"~"castle|fort"]["name"](area.searchArea);
+  way["historic"~"castle|fort"]["name"](area.searchArea);
+  relation["historic"~"castle|fort"]["name"](area.searchArea);
+);
+out center;
+```
+
+### 2. Exportuj a ulož
+
+Export → GeoJSON → ulož jako `export.geojson` do kořene repozitáře.
+
+### 3. Commitni a importuj
+
+```bash
+git add export.geojson
+git commit -m "data: aktualizuj zámky z OSM"
+git push
+```
+
+V admin panelu klikni **Sync Zámky**.
+
+---
+
 ## Struktura dat
 
 | Soubor | Obsah |
 |---|---|
 | `data/peaks.json` | Horské vrcholy (ČR) — scraping z hory.app |
 | `data/areas.json` | Pohoří (ČR) — scraping z hory.app |
-| `public/export.geojson` | Hrady a zámky — export z OpenStreetMap |
+| `export.geojson` | Hrady a zámky — manuální export z OpenStreetMap |
