@@ -1,0 +1,475 @@
+{
+  "scrapedAt": "2026-04-27T07:41:51.649Z",
+  "areas": [
+    {
+      "name": "Pražská plošina",
+      "url": "https://cs.hory.app/area/57-prazska-plosina",
+      "slug": "57-prazska-plosina"
+    },
+    {
+      "name": "Dolnooharská tabule",
+      "url": "https://cs.hory.app/area/66-dolnooharska-tabule",
+      "slug": "66-dolnooharska-tabule"
+    },
+    {
+      "name": "Středolabská tabule",
+      "url": "https://cs.hory.app/area/68-stredolabska-tabule",
+      "slug": "68-stredolabska-tabule"
+    },
+    {
+      "name": "Jevišovická pahorkatina",
+      "url": "https://cs.hory.app/area/20-jevisovicka-pahorkatina",
+      "slug": "20-jevisovicka-pahorkatina"
+    },
+    {
+      "name": "Zábřežská vrchovina",
+      "url": "https://cs.hory.app/area/46-zabrezska-vrchovina",
+      "slug": "46-zabrezska-vrchovina"
+    },
+    {
+      "name": "Jizerská tabule",
+      "url": "https://cs.hory.app/area/67-jizerska-tabule",
+      "slug": "67-jizerska-tabule"
+    },
+    {
+      "name": "Dyjsko-svratecký úval",
+      "url": "https://cs.hory.app/area/73-dyjsko-svratecky-uval",
+      "slug": "73-dyjsko-svratecky-uval"
+    },
+    {
+      "name": "Vlašimská pahorkatina",
+      "url": "https://cs.hory.app/area/9-vlasimska-pahorkatina",
+      "slug": "9-vlasimska-pahorkatina"
+    },
+    {
+      "name": "Svitavská pahorkatina",
+      "url": "https://cs.hory.app/area/71-svitavska-pahorkatina",
+      "slug": "71-svitavska-pahorkatina"
+    },
+    {
+      "name": "Ralská pahorkatina",
+      "url": "https://cs.hory.app/area/64-ralska-pahorkatina",
+      "slug": "64-ralska-pahorkatina"
+    },
+    {
+      "name": "Jičínská pahorkatina",
+      "url": "https://cs.hory.app/area/65-jicinska-pahorkatina",
+      "slug": "65-jicinska-pahorkatina"
+    },
+    {
+      "name": "Hornosázavská pahorkatina",
+      "url": "https://cs.hory.app/area/15-hornosazavska-pahorkatina",
+      "slug": "15-hornosazavska-pahorkatina"
+    },
+    {
+      "name": "Doupovské hory",
+      "url": "https://cs.hory.app/area/30-doupovske-hory",
+      "slug": "30-doupovske-hory"
+    },
+    {
+      "name": "Benešovská pahorkatina",
+      "url": "https://cs.hory.app/area/8-benesovska-pahorkatina",
+      "slug": "8-benesovska-pahorkatina"
+    },
+    {
+      "name": "Podorlická pahorkatina",
+      "url": "https://cs.hory.app/area/44-podorlicka-pahorkatina",
+      "slug": "44-podorlicka-pahorkatina"
+    },
+    {
+      "name": "Ždánický les",
+      "url": "https://cs.hory.app/area/79-zdanicky-les",
+      "slug": "79-zdanicky-les"
+    },
+    {
+      "name": "České středohoří",
+      "url": "https://cs.hory.app/area/31-ceske-stredohori",
+      "slug": "31-ceske-stredohori"
+    },
+    {
+      "name": "Jizerské hory",
+      "url": "https://cs.hory.app/area/39-jizerske-hory",
+      "slug": "39-jizerske-hory"
+    },
+    {
+      "name": "Šumavské podhůří",
+      "url": "https://cs.hory.app/area/5-sumavske-podhuri",
+      "slug": "5-sumavske-podhuri"
+    },
+    {
+      "name": "Brdská vrchovina",
+      "url": "https://cs.hory.app/area/60-brdska-vrchovina",
+      "slug": "60-brdska-vrchovina"
+    },
+    {
+      "name": "Šumava",
+      "url": "https://cs.hory.app/area/4-sumava",
+      "slug": "4-sumava"
+    },
+    {
+      "name": "Hornosvratecká vrchovina",
+      "url": "https://cs.hory.app/area/17-hornosvratecka-vrchovina",
+      "slug": "17-hornosvratecka-vrchovina"
+    },
+    {
+      "name": "Křižanovská vrchovina",
+      "url": "https://cs.hory.app/area/18-krizanovska-vrchovina",
+      "slug": "18-krizanovska-vrchovina"
+    },
+    {
+      "name": "Nízký Jeseník",
+      "url": "https://cs.hory.app/area/53-nizky-jesenik",
+      "slug": "53-nizky-jesenik"
+    },
+    {
+      "name": "Křemešnická vrchovina",
+      "url": "https://cs.hory.app/area/14-kremesnicka-vrchovina",
+      "slug": "14-kremesnicka-vrchovina"
+    },
+    {
+      "name": "Krušné hory",
+      "url": "https://cs.hory.app/area/25-krusne-hory",
+      "slug": "25-krusne-hory"
+    },
+    {
+      "name": "Švihovská vrchovina",
+      "url": "https://cs.hory.app/area/63-svihovska-vrchovina",
+      "slug": "63-svihovska-vrchovina"
+    },
+    {
+      "name": "Blatenská pahorkatina",
+      "url": "https://cs.hory.app/area/11-blatenska-pahorkatina",
+      "slug": "11-blatenska-pahorkatina"
+    },
+    {
+      "name": "Plaská pahorkatina",
+      "url": "https://cs.hory.app/area/62-plaska-pahorkatina",
+      "slug": "62-plaska-pahorkatina"
+    },
+    {
+      "name": "Krkonošské podhůří",
+      "url": "https://cs.hory.app/area/41-krkonosske-podhuri",
+      "slug": "41-krkonosske-podhuri"
+    },
+    {
+      "name": "Podbeskydská pahorkatina",
+      "url": "https://cs.hory.app/area/86-podbeskydska-pahorkatina",
+      "slug": "86-podbeskydska-pahorkatina"
+    },
+    {
+      "name": "Křivoklátská vrchovina",
+      "url": "https://cs.hory.app/area/58-krivoklatska-vrchovina",
+      "slug": "58-krivoklatska-vrchovina"
+    },
+    {
+      "name": "Drahanská vrchovina",
+      "url": "https://cs.hory.app/area/23-drahanska-vrchovina",
+      "slug": "23-drahanska-vrchovina"
+    },
+    {
+      "name": "Český les",
+      "url": "https://cs.hory.app/area/1-cesky-les",
+      "slug": "1-cesky-les"
+    },
+    {
+      "name": "Hostýnsko-vsetínská hornatina",
+      "url": "https://cs.hory.app/area/87-hostynsko-vsetinska-hornatina",
+      "slug": "87-hostynsko-vsetinska-hornatina"
+    },
+    {
+      "name": "Hanušovická vrchovina",
+      "url": "https://cs.hory.app/area/48-hanusovicka-vrchovina",
+      "slug": "48-hanusovicka-vrchovina"
+    },
+    {
+      "name": "Táborská pahorkatina",
+      "url": "https://cs.hory.app/area/10-taborska-pahorkatina",
+      "slug": "10-taborska-pahorkatina"
+    },
+    {
+      "name": "Vizovická vrchovina",
+      "url": "https://cs.hory.app/area/83-vizovicka-vrchovina",
+      "slug": "83-vizovicka-vrchovina"
+    },
+    {
+      "name": "Javořická vrchovina",
+      "url": "https://cs.hory.app/area/19-javoricka-vrchovina",
+      "slug": "19-javoricka-vrchovina"
+    },
+    {
+      "name": "Moravskoslezské Beskydy",
+      "url": "https://cs.hory.app/area/89-moravskoslezske-beskydy",
+      "slug": "89-moravskoslezske-beskydy"
+    },
+    {
+      "name": "Rakovnická pahorkatina",
+      "url": "https://cs.hory.app/area/61-rakovnicka-pahorkatina",
+      "slug": "61-rakovnicka-pahorkatina"
+    },
+    {
+      "name": "Slavkovský les",
+      "url": "https://cs.hory.app/area/32-slavkovsky-les",
+      "slug": "32-slavkovsky-les"
+    },
+    {
+      "name": "Broumovská vrchovina",
+      "url": "https://cs.hory.app/area/42-broumovska-vrchovina",
+      "slug": "42-broumovska-vrchovina"
+    },
+    {
+      "name": "Orlická tabule",
+      "url": "https://cs.hory.app/area/70-orlicka-tabule",
+      "slug": "70-orlicka-tabule"
+    },
+    {
+      "name": "Hrubý Jeseník",
+      "url": "https://cs.hory.app/area/52-hruby-jesenik",
+      "slug": "52-hruby-jesenik"
+    },
+    {
+      "name": "Zlatohorská vrchovina",
+      "url": "https://cs.hory.app/area/51-zlatohorska-vrchovina",
+      "slug": "51-zlatohorska-vrchovina"
+    },
+    {
+      "name": "Podčeskoleská pahorkatina",
+      "url": "https://cs.hory.app/area/2-podceskoleska-pahorkatina",
+      "slug": "2-podceskoleska-pahorkatina"
+    },
+    {
+      "name": "Východolabská tabule",
+      "url": "https://cs.hory.app/area/69-vychodolabska-tabule",
+      "slug": "69-vychodolabska-tabule"
+    },
+    {
+      "name": "Rychlebské hory",
+      "url": "https://cs.hory.app/area/50-rychlebske-hory",
+      "slug": "50-rychlebske-hory"
+    },
+    {
+      "name": "Třeboňská pánev",
+      "url": "https://cs.hory.app/area/13-trebonska-panev",
+      "slug": "13-trebonska-panev"
+    },
+    {
+      "name": "Železné hory",
+      "url": "https://cs.hory.app/area/16-zelezne-hory",
+      "slug": "16-zelezne-hory"
+    },
+    {
+      "name": "Tepelská vrchovina",
+      "url": "https://cs.hory.app/area/33-tepelska-vrchovina",
+      "slug": "33-tepelska-vrchovina"
+    },
+    {
+      "name": "Bílé Karpaty",
+      "url": "https://cs.hory.app/area/84-bile-karpaty",
+      "slug": "84-bile-karpaty"
+    },
+    {
+      "name": "Bobravská vrchovina",
+      "url": "https://cs.hory.app/area/22-bobravska-vrchovina",
+      "slug": "22-bobravska-vrchovina"
+    },
+    {
+      "name": "Lužické hory",
+      "url": "https://cs.hory.app/area/35-luzicke-hory",
+      "slug": "35-luzicke-hory"
+    },
+    {
+      "name": "Chřiby",
+      "url": "https://cs.hory.app/area/81-chriby",
+      "slug": "81-chriby"
+    },
+    {
+      "name": "Děčínská vrchovina",
+      "url": "https://cs.hory.app/area/26-decinska-vrchovina",
+      "slug": "26-decinska-vrchovina"
+    },
+    {
+      "name": "Krkonoše",
+      "url": "https://cs.hory.app/area/40-krkonose",
+      "slug": "40-krkonose"
+    },
+    {
+      "name": "Ještědsko-kozákovský hřbet",
+      "url": "https://cs.hory.app/area/36-jestedsko-kozakovsky-hrbet",
+      "slug": "36-jestedsko-kozakovsky-hrbet"
+    },
+    {
+      "name": "Novohradské podhůří",
+      "url": "https://cs.hory.app/area/7-novohradske-podhuri",
+      "slug": "7-novohradske-podhuri"
+    },
+    {
+      "name": "Českobudějovická pánev",
+      "url": "https://cs.hory.app/area/12-ceskobudejovicka-panev",
+      "slug": "12-ceskobudejovicka-panev"
+    },
+    {
+      "name": "Orlické hory",
+      "url": "https://cs.hory.app/area/43-orlicke-hory",
+      "slug": "43-orlicke-hory"
+    },
+    {
+      "name": "Všerubská vrchovina",
+      "url": "https://cs.hory.app/area/3-vserubska-vrchovina",
+      "slug": "3-vserubska-vrchovina"
+    },
+    {
+      "name": "Javorníky",
+      "url": "https://cs.hory.app/area/85-javorniky",
+      "slug": "85-javorniky"
+    },
+    {
+      "name": "Boskovická brázda",
+      "url": "https://cs.hory.app/area/21-boskovicka-brazda",
+      "slug": "21-boskovicka-brazda"
+    },
+    {
+      "name": "Kyjovská pahorkatina",
+      "url": "https://cs.hory.app/area/82-kyjovska-pahorkatina",
+      "slug": "82-kyjovska-pahorkatina"
+    },
+    {
+      "name": "Šluknovská pahorkatina",
+      "url": "https://cs.hory.app/area/34-sluknovska-pahorkatina",
+      "slug": "34-sluknovska-pahorkatina"
+    },
+    {
+      "name": "Smrčiny",
+      "url": "https://cs.hory.app/area/24-smrciny",
+      "slug": "24-smrciny"
+    },
+    {
+      "name": "Mostecká pánev",
+      "url": "https://cs.hory.app/area/29-mostecka-panev",
+      "slug": "29-mostecka-panev"
+    },
+    {
+      "name": "Frýdlantská pahorkatina",
+      "url": "https://cs.hory.app/area/38-frydlantska-pahorkatina",
+      "slug": "38-frydlantska-pahorkatina"
+    },
+    {
+      "name": "Litenčická pahorkatina",
+      "url": "https://cs.hory.app/area/80-litencicka-pahorkatina",
+      "slug": "80-litencicka-pahorkatina"
+    },
+    {
+      "name": "Hořovická pahorkatina",
+      "url": "https://cs.hory.app/area/59-horovicka-pahorkatina",
+      "slug": "59-horovicka-pahorkatina"
+    },
+    {
+      "name": "Novohradské hory",
+      "url": "https://cs.hory.app/area/6-novohradske-hory",
+      "slug": "6-novohradske-hory"
+    },
+    {
+      "name": "Žitavská pánev",
+      "url": "https://cs.hory.app/area/37-zitavska-panev",
+      "slug": "37-zitavska-panev"
+    },
+    {
+      "name": "Džbán",
+      "url": "https://cs.hory.app/area/56-dzban",
+      "slug": "56-dzban"
+    },
+    {
+      "name": "Dolnomoravský úval",
+      "url": "https://cs.hory.app/area/93-dolnomoravsky-uval",
+      "slug": "93-dolnomoravsky-uval"
+    },
+    {
+      "name": "Rožnovská brázda",
+      "url": "https://cs.hory.app/area/88-roznovska-brazda",
+      "slug": "88-roznovska-brazda"
+    },
+    {
+      "name": "Ostravská pánev",
+      "url": "https://cs.hory.app/area/77-ostravska-panev",
+      "slug": "77-ostravska-panev"
+    },
+    {
+      "name": "Sokolovská pánev",
+      "url": "https://cs.hory.app/area/28-sokolovska-panev",
+      "slug": "28-sokolovska-panev"
+    },
+    {
+      "name": "Slezské Beskydy",
+      "url": "https://cs.hory.app/area/91-slezske-beskydy",
+      "slug": "91-slezske-beskydy"
+    },
+    {
+      "name": "Hornomoravský úval",
+      "url": "https://cs.hory.app/area/75-hornomoravsky-uval",
+      "slug": "75-hornomoravsky-uval"
+    },
+    {
+      "name": "Žulovská pahorkatina",
+      "url": "https://cs.hory.app/area/55-zulovska-pahorkatina",
+      "slug": "55-zulovska-pahorkatina"
+    },
+    {
+      "name": "Králický Sněžník",
+      "url": "https://cs.hory.app/area/49-kralicky-sneznik",
+      "slug": "49-kralicky-sneznik"
+    },
+    {
+      "name": "Moravská brána",
+      "url": "https://cs.hory.app/area/76-moravska-brana",
+      "slug": "76-moravska-brana"
+    },
+    {
+      "name": "Mikulovská vrchovina",
+      "url": "https://cs.hory.app/area/78-mikulovska-vrchovina",
+      "slug": "78-mikulovska-vrchovina"
+    },
+    {
+      "name": "Chebská pánev",
+      "url": "https://cs.hory.app/area/27-chebska-panev",
+      "slug": "27-chebska-panev"
+    },
+    {
+      "name": "Opavská pahorkatina",
+      "url": "https://cs.hory.app/area/72-opavska-pahorkatina",
+      "slug": "72-opavska-pahorkatina"
+    },
+    {
+      "name": "Jablunkovské mezihoří",
+      "url": "https://cs.hory.app/area/92-jablunkovske-mezihori",
+      "slug": "92-jablunkovske-mezihori"
+    },
+    {
+      "name": "Jablunkovská brázda",
+      "url": "https://cs.hory.app/area/90-jablunkovska-brazda",
+      "slug": "90-jablunkovska-brazda"
+    },
+    {
+      "name": "Vyškovská brána",
+      "url": "https://cs.hory.app/area/74-vyskovska-brana",
+      "slug": "74-vyskovska-brana"
+    },
+    {
+      "name": "Chvojnická pahorkatina",
+      "url": "https://cs.hory.app/area/94-chvojnicka-pahorkatina",
+      "slug": "94-chvojnicka-pahorkatina"
+    },
+    {
+      "name": "Vidnavská nížina",
+      "url": "https://cs.hory.app/area/54-vidnavska-nizina",
+      "slug": "54-vidnavska-nizina"
+    },
+    {
+      "name": "Kladská kotlina",
+      "url": "https://cs.hory.app/area/45-kladska-kotlina",
+      "slug": "45-kladska-kotlina"
+    },
+    {
+      "name": "Mohelnická brázda",
+      "url": "https://cs.hory.app/area/47-mohelnicka-brazda",
+      "slug": "47-mohelnicka-brazda"
+    }
+  ]
+}
