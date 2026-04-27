@@ -681,99 +681,84 @@ export class HoryScraperService {
   }
 
   private static async extractClientSidePoints(page: Page): Promise<HoryMapPoint[]> {
-    const rawPoints = await page.evaluate(() => {
-      const out: Array<{ lat: number; lon: number; name?: string; peakName?: string; altitude?: number | string; mountainLink?: string; source?: string }> = [];
-
-      function toNumber(value: unknown): number | null {
-        if (typeof value === "number") return Number.isFinite(value) ? value : null;
-        if (typeof value === "string") { const n = Number(value); return Number.isFinite(n) ? n : null; }
+    // Předáváme jako string — tsx/esbuild by jinak přidal __name() do serializované funkce
+    const rawPoints = await page.evaluate(`(function() {
+      var out = [];
+      function toNumber(v) {
+        if (typeof v === 'number') return isFinite(v) ? v : null;
+        if (typeof v === 'string') { var n = Number(v); return isFinite(n) ? n : null; }
         return null;
       }
-
-      function add(lat: unknown, lon: unknown, name: unknown, source: string, extra?: { peakName?: unknown; altitude?: unknown; mountainLink?: unknown }): void {
-        const latNum = toNumber(lat);
-        const lonNum = toNumber(lon);
-        if (latNum === null || lonNum === null) return;
-        const peakName = typeof extra?.peakName === "string" ? extra.peakName : typeof name === "string" ? name : undefined;
+      function add(lat, lon, name, source, extra) {
+        var la = toNumber(lat), lo = toNumber(lon);
+        if (la === null || lo === null) return;
+        var peakName = (extra && typeof extra.peakName === 'string') ? extra.peakName : (typeof name === 'string' ? name : undefined);
         out.push({
-          lat: latNum, lon: lonNum,
-          name: typeof name === "string" ? name : undefined,
-          peakName,
-          altitude: typeof extra?.altitude === "number" || typeof extra?.altitude === "string" ? extra.altitude : undefined,
-          mountainLink: typeof extra?.mountainLink === "string" ? extra.mountainLink : undefined,
-          source,
+          lat: la, lon: lo,
+          name: typeof name === 'string' ? name : undefined,
+          peakName: peakName,
+          altitude: (extra && (typeof extra.altitude === 'number' || typeof extra.altitude === 'string')) ? extra.altitude : undefined,
+          mountainLink: (extra && typeof extra.mountainLink === 'string') ? extra.mountainLink : undefined,
+          source: source
         });
       }
-
-      function parseAttrNumber(value: string | null): number | undefined {
-        if (value === null) return undefined;
-        const num = Number(value);
-        return Number.isFinite(num) ? num : undefined;
-      }
-
-      function looksInteresting(key: string): boolean {
-        return /(map|leaflet|marker|pin|feature|point|store|state|param)/i.test(key);
-      }
-
-      const visited = new WeakSet<object>();
-
-      function walk(node: unknown, source: string, depth = 0): void {
+      function parseAttr(v) { if (v === null) return undefined; var n = Number(v); return isFinite(n) ? n : undefined; }
+      function interesting(k) { return /(map|leaflet|marker|pin|feature|point|store|state|param)/i.test(k); }
+      var visited = new WeakSet();
+      function walk(node, source, depth) {
+        if (!depth) depth = 0;
         if (depth > 7 || node === null || node === undefined) return;
         if (Array.isArray(node)) {
-          if (node.length >= 2 && typeof node[0] === "number" && typeof node[1] === "number") {
-            add(node[1], node[0], undefined, source);
-          }
-          for (const item of node) walk(item, source, depth + 1);
+          if (node.length >= 2 && typeof node[0] === 'number' && typeof node[1] === 'number') add(node[1], node[0], undefined, source);
+          for (var i = 0; i < node.length; i++) walk(node[i], source, depth + 1);
           return;
         }
-        if (typeof node !== "object") return;
-        const obj = node as Record<string, unknown>;
-        if (visited.has(obj)) return;
-        visited.add(obj);
-        add(obj.lat ?? obj.latitude, obj.lng ?? obj.lon ?? obj.longitude, obj.name ?? obj.title, source);
-        for (const [key, value] of Object.entries(obj)) {
-          if (depth <= 1 || looksInteresting(key)) walk(value, `${source}.${key}`, depth + 1);
+        if (typeof node !== 'object') return;
+        if (visited.has(node)) return;
+        visited.add(node);
+        add(node.lat || node.latitude, node.lng || node.lon || node.longitude, node.name || node.title, source);
+        var keys = Object.keys(node);
+        for (var j = 0; j < keys.length; j++) {
+          if (depth <= 1 || interesting(keys[j])) walk(node[keys[j]], source + '.' + keys[j], depth + 1);
         }
       }
-
-      const attrSelectors = ["[data-lat][data-lng]", "[data-latitude][data-longitude]", "[data-lat][data-lon]"];
-      for (const selector of attrSelectors) {
-        for (const el of Array.from(document.querySelectorAll(selector))) {
-          const element = el as HTMLElement;
-          const lat = parseAttrNumber(element.getAttribute("data-lat")) ?? parseAttrNumber(element.getAttribute("data-latitude"));
-          const lon = parseAttrNumber(element.getAttribute("data-lng")) ?? parseAttrNumber(element.getAttribute("data-lon")) ?? parseAttrNumber(element.getAttribute("data-longitude"));
-          add(lat, lon, element.getAttribute("title") || element.getAttribute("aria-label") || undefined, "dom:data-attributes");
+      var selectors = ['[data-lat][data-lng]','[data-latitude][data-longitude]','[data-lat][data-lon]'];
+      for (var s = 0; s < selectors.length; s++) {
+        var els = document.querySelectorAll(selectors[s]);
+        for (var e = 0; e < els.length; e++) {
+          var el = els[e];
+          var lat = parseAttr(el.getAttribute('data-lat')) || parseAttr(el.getAttribute('data-latitude'));
+          var lon = parseAttr(el.getAttribute('data-lng')) || parseAttr(el.getAttribute('data-lon')) || parseAttr(el.getAttribute('data-longitude'));
+          add(lat, lon, el.getAttribute('title') || el.getAttribute('aria-label'), 'dom:data-attributes');
         }
       }
-
-      const win = window as unknown as Record<string, unknown>;
-      const params = win["PARAMS"] as Record<string, unknown> | undefined;
+      var params = window.PARAMS;
       if (params) {
-        if (Array.isArray(params["areaMountains"])) {
-          for (const item of params["areaMountains"] as Record<string, unknown>[]) {
-            if (!item || typeof item !== "object") continue;
-            add(item["latitude"], item["longitude"], item["name"], "window.PARAMS.areaMountains", { peakName: item["name"], altitude: item["altitude"], mountainLink: item["mountainLink"] });
+        if (Array.isArray(params.areaMountains)) {
+          for (var a = 0; a < params.areaMountains.length; a++) {
+            var m = params.areaMountains[a];
+            if (!m || typeof m !== 'object') continue;
+            add(m.latitude, m.longitude, m.name, 'window.PARAMS.areaMountains', { peakName: m.name, altitude: m.altitude, mountainLink: m.mountainLink });
           }
         }
-        if (Array.isArray(params["mapVisits"])) {
-          for (const item of params["mapVisits"] as Record<string, unknown>[]) {
-            if (!item || typeof item !== "object") continue;
-            add(item["latitude"], item["longitude"], item["name"] ?? item["userName"], "window.PARAMS.mapVisits");
+        if (Array.isArray(params.mapVisits)) {
+          for (var v = 0; v < params.mapVisits.length; v++) {
+            var mv = params.mapVisits[v];
+            if (!mv || typeof mv !== 'object') continue;
+            add(mv.latitude, mv.longitude, mv.name || mv.userName, 'window.PARAMS.mapVisits');
           }
         }
-        if (params["mountain"] && typeof params["mountain"] === "object") {
-          const m = params["mountain"] as Record<string, unknown>;
-          add(m["latitude"], m["longitude"], m["name"], "window.PARAMS.mountain");
+        if (params.mountain && typeof params.mountain === 'object') {
+          add(params.mountain.latitude, params.mountain.longitude, params.mountain.name, 'window.PARAMS.mountain');
         }
-        walk(params, "window.PARAMS", 0);
+        walk(params, 'window.PARAMS', 0);
       }
-
-      for (const [key, value] of Object.entries(win)) {
-        if (looksInteresting(key)) walk(value, `window.${key}`, 0);
+      var winKeys = Object.keys(window);
+      for (var w = 0; w < winKeys.length; w++) {
+        if (interesting(winKeys[w])) walk(window[winKeys[w]], 'window.' + winKeys[w], 0);
       }
-
       return out;
-    });
+    })()`) as Array<{ lat: number; lon: number; name?: string; peakName?: string; altitude?: number | string; mountainLink?: string; source?: string }>;
 
     const normalized = rawPoints
       .map((point) => HoryScraperService.normalizePoint(point))
