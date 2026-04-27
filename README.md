@@ -1,58 +1,101 @@
-# Hory.app scraper (Next.js)
+# Trek Planner
 
-Jednoduchá aplikace v Next.js, která:
-- vezme login + heslo pro `cs.hory.app`,
-- přihlásí se přes headless browser (Playwright),
-- načte stránku (default `https://cs.hory.app/country/czech-republic`),
-- načte seznam pohoří,
-- umí také vrátit body načtené v mapovém modulu (OpenStreetMap vrstva),
-- umožňuje filtrovat vrcholy podle počátečních písmen a zobrazit je na OSM mapě.
-- má 2krokový workflow: po přihlášení načte oblasti a jejich hranice, výběr oblastí pak probíhá klikáním v mapě.
+Mapová aplikace pro plánování výletů s modulárním systémem lokalit (horské vrcholy, hrady a zámky, ...).
 
-## Spuštění
+## Spuštění lokálně
 
 ```bash
-cp .env.example .env.local
-npm install
-npx playwright install chromium
-npm run dev
+pnpm install
+pnpm dev
 ```
 
-Pak otevři `http://localhost:3000`.
+Otevři `http://localhost:3000`.
 
-`MAPY_API_KEY` v `.env.local` je povinný pro plánování tras (`POST /api/plan-route`).
-`HORY_TARGET_URL` v `.env.local` určuje zdrojovou country stránku pro scrape (default je ČR).
-`GEMINI_API_KEY` je volitelný pro AI parser promptů (`POST /api/ai-plan-route`); bez něj se použije heuristický parser.
+### Požadované proměnné prostředí (`.env.local`)
 
-## Poznámky
+```env
+DATABASE_URL=postgresql://...
+BETTER_AUTH_SECRET=...
+BETTER_AUTH_URL=http://localhost:3000
+SETTINGS_ENCRYPTION_KEY=...
+```
 
-- Endpointy:
-  - `POST /api/scrape` (seznam pohoří)
-  - `POST /api/area-geojson` (hranice oblastí pro mapový výběr)
-  - `POST /api/map-points` (body z mapy)
-  - `POST /api/plan-route` (plánování turistických tras přes Mapy.com Routing API)
-  - `POST /api/ai-plan-route` (textový prompt -> intent -> plánování tras)
-- Login probíhá server-side, údaje se nikam trvale neukládají.
-- Selektory pro login jsou dělané obecně; pokud by se stránka změnila, může být potřeba je upravit v `app/api/scrape/route.ts`.
-- U mapových bodů platí: endpoint vrací vše, co se podaří získat z mapových API odpovědí (GeoJSON/JSON s koordináty) po načtení mapy a krátké interakci (zoom/pan). Pokud backend mapy vrací data po dávkách podle výřezu, může být potřeba scraper rozšířit o systematické procházení bbox.
-- `POST /api/map-points` průběžně loguje postup do terminálu (`npm run dev`), např. kolik `/area` stránek už proběhlo a průběžný počet bodů.
-- Volitelně lze poslat `maxRanges` (1-300) pro omezení počtu procházených `/area` stránek při country URL.
-- Výstup bodů nyní obsahuje i `peakName` (název vrcholu), a pokud je dostupné, také `altitude` a `mountainLink`.
-- V UI je filtr písmen abecedy; do API se posílá jako `startsWithLetters`.
-- Výběr oblastí probíhá klikáním v mapě polygonů (toggle výběru), technicky přes `selectedAreaUrls`.
-
-## Debug mapy
-
-Pro analýzu toho, co se při načtení mapy opravdu volá (network + JS bundly), je v projektu script:
+### Migrace DB
 
 ```bash
-HORY_USERNAME='tvuj_login' \
-HORY_PASSWORD='tvoje_heslo' \
-TARGET_URL='https://cs.hory.app/country/czech-republic' \
-npm run inspect:map
+pnpm db:migrate
 ```
 
-Výstup uloží do `map-debug-report.json`:
-- `filteredNetwork`: kandidátní requesty pro mapu (xhr/fetch/tile/json),
-- `scriptInsights`: nalezené URL/API stringy z načtených JS souborů,
-- `counters`: rychlé počty (`jsonLike`, `tileLike` atd.).
+---
+
+## Příprava dat — lokální scraping
+
+Data do DB se načítají ze statických JSON souborů commitnutých v repozitáři.
+Playwright běží **pouze lokálně**, produkční server scraper nepotřebuje.
+
+### 1. Nastav Hory.app přihlašovací údaje v `.env.local`
+
+```env
+HORY_USERNAME=tvuj@email.cz
+HORY_PASSWORD=tvoje_heslo
+```
+
+Volitelně:
+```env
+HORY_TARGET_URL=https://cs.hory.app/country/czech-republic
+HORY_COUNTRY_CODE=cz
+```
+
+### 2. Nainstaluj Playwright browser (jednou)
+
+```bash
+pnpm exec playwright install chromium
+```
+
+### 3. Spusť scraper
+
+```bash
+# Vrcholy (~5–15 minut, crawluje všechny oblasti)
+pnpm scrape:peaks
+
+# Oblasti (rychlé, jen seznam pohoří)
+pnpm scrape:areas
+```
+
+Výstup:
+- `data/peaks.json` — seznam vrcholů s koordináty, nadmořskou výškou a odkazem na oblast
+- `data/areas.json` — seznam pohoří s URL a slugem
+
+### 4. Commitni a pushni data
+
+```bash
+git add data/peaks.json data/areas.json
+git commit -m "data: aktualizuj vrcholy a oblasti"
+git push
+```
+
+### 5. Importuj do DB přes Admin panel
+
+Po deployi klikni v Admin panelu na **Sync Vrcholy** a **Sync Oblasti**.
+Endpoint přečte JSON soubor z disku a upsertuje záznamy do DB (sekundy, žádný browser).
+
+---
+
+## Admin panel
+
+Dostupný na `/admin` (vyžaduje roli `admin` v DB).
+
+Pro nastavení admin role v produkci:
+```sql
+UPDATE "user" SET role = 'admin' WHERE email = 'tvuj@email.cz';
+```
+
+---
+
+## Struktura dat
+
+| Soubor | Obsah |
+|---|---|
+| `data/peaks.json` | Horské vrcholy (ČR) — scraping z hory.app |
+| `data/areas.json` | Pohoří (ČR) — scraping z hory.app |
+| `public/export.geojson` | Hrady a zámky — export z OpenStreetMap |
