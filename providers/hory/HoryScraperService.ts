@@ -682,17 +682,10 @@ export class HoryScraperService {
 
   private static async extractClientSidePoints(page: Page): Promise<HoryMapPoint[]> {
     const rawPoints = await page.evaluate(() => {
-      type RawPoint = {
-        lat: number;
-        lon: number;
-        name?: string;
-        peakName?: string;
-        altitude?: number | string;
-        mountainLink?: string;
-        source?: string;
-      };
-
-      const out: RawPoint[] = [];
+      const out: Array<{
+        lat: number; lon: number; name?: string; peakName?: string;
+        altitude?: number | string; mountainLink?: string; source?: string;
+      }> = [];
 
       const toNumber = (value: unknown): number | null => {
         if (typeof value === "number") return Number.isFinite(value) ? value : null;
