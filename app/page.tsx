@@ -31,7 +31,7 @@ import { SELECTED_LETTER_COLORS, ensureArray, normalizeLetter } from "../lib/pag
 import { useChallenges } from "../hooks/useChallenges";
 import { useDataFetching } from "../hooks/useDataFetching";
 import { useAreas } from "../hooks/useAreas";
-import type { CountryCode, MapPoint, PlannedRoute, SectionKey } from "../lib/page-types";
+import type { ActiveDetail, CountryCode, MapPoint, PlannedRoute, SectionKey } from "../lib/page-types";
 import type { CastlePoint } from "../lib/castles/types";
 import type { BaseMapType } from "../lib/page-config";
 
@@ -48,7 +48,8 @@ export default function HomePage() {
   const [planningTab, setPlanningTab] = useState<"trips" | "routes">("trips");
   const [castleSearchQuery, setCastleSearchQuery] = useState("");
   const [isModulePanelOpen, setIsModulePanelOpen] = useState(true);
-  const [selectedPeak, setSelectedPeak] = useState<MapPoint | null>(null);
+  const [activeDetail, setActiveDetail] = useState<ActiveDetail>({ type: null, data: null });
+  const selectedPeak = activeDetail.type === "peak" ? activeDetail.data : null;
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
   const [expandedChallengeId, setExpandedChallengeId] = useState<string | null>(null);
   const [filterByMapBounds, setFilterByMapBounds] = useState(true);
@@ -122,12 +123,11 @@ export default function HomePage() {
   const [mapReady, setMapReady] = useState(false);
   const [mapBounds, setMapBounds] = useState<{ south: number; west: number; north: number; east: number } | null>(null);
 
-  const [selectedCastle, setSelectedCastle] = useState<CastlePoint | null>(null);
+  const selectedCastle = activeDetail.type === "castle" ? activeDetail.data : null;
   const [showCastlesLayer, setShowCastlesLayer] = useState(true);
   const [filterCastlesByMapBounds, setFilterCastlesByMapBounds] = useState(true);
   useEffect(() => {
     if (activeModule === "zamky") setShowCastlesLayer(true);
-    else setSelectedCastle(null);
   }, [activeModule]);
 
   // ─── Domain hooks ─────────────────────────────────────────────────────────
@@ -195,6 +195,15 @@ export default function HomePage() {
     if (selectedCountries.length !== 1 || !selectedCountries.includes("cz")) count++;
     return count;
   }, [selectedLetters, selectedAreaSlugs, selectedRangeUrls, selectedCountries]);
+
+  // ─── Detail selection callbacks ───────────────────────────────────────────
+  function setSelectedPeak(p: MapPoint | null) {
+    setActiveDetail(p ? { type: "peak", data: p } : { type: null, data: null });
+  }
+  function setSelectedCastle(c: CastlePoint | null) {
+    setActiveDetail(c ? { type: "castle", data: c } : { type: null, data: null });
+  }
+  function handleDetailClose() { setActiveDetail({ type: null, data: null }); }
 
   // ─── Map effects ─────────────────────────────────────────────────────────
   useMapEffects({
@@ -349,14 +358,14 @@ export default function HomePage() {
         </aside>
         <div className="relative min-w-0 flex-1 overflow-hidden isolate">
           <MapContainer containerRef={areaSelectMapContainerRef} />
-          {selectedPeak && (
+          {activeDetail.type !== null && (
             <div className="absolute bottom-4 left-4 z-[900] w-80 max-h-[calc(100vh-6rem)] overflow-y-auto">
-              <PeakDetail peak={selectedPeak} userAscents={userAscents} userVisits={userVisits} peakChallengesMap={peakChallengesMap} getPeakId={(link) => { const m = /\/mountain\/(\d+)-/.exec(link ?? ""); return m ? Number(m[1]) : null; }} isLoggedIn={!!session} onVisitChange={handleVisitChange} onBack={() => setSelectedPeak(null)} />
-            </div>
-          )}
-          {selectedCastle && (
-            <div className="absolute top-4 right-4 z-[900] w-80 max-h-[calc(100vh-6rem)] overflow-y-auto">
-              <CastleDetail castle={selectedCastle} userVisits={userVisits} isLoggedIn={!!session} onVisitChange={(id, action) => handleVisitChange(id, action, "castle")} onBack={() => setSelectedCastle(null)} />
+              {activeDetail.type === "peak" && (
+                <PeakDetail peak={activeDetail.data} userAscents={userAscents} userVisits={userVisits} peakChallengesMap={peakChallengesMap} getPeakId={(link) => { const m = /\/mountain\/(\d+)-/.exec(link ?? ""); return m ? Number(m[1]) : null; }} isLoggedIn={!!session} onVisitChange={handleVisitChange} onBack={handleDetailClose} />
+              )}
+              {activeDetail.type === "castle" && (
+                <CastleDetail castle={activeDetail.data} userVisits={userVisits} isLoggedIn={!!session} onVisitChange={(id, action) => handleVisitChange(id, action, "castle")} onBack={handleDetailClose} />
+              )}
             </div>
           )}
           <ChatPanel messages={messages} input={input} isLoading={chatLoading} onInputChange={handleInputChange} onSubmit={handleSubmit} />

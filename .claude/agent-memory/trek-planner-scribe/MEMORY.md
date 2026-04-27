@@ -1,2 +1,4 @@
 - [Trek Planner Agent Workflow](project_agent_workflow.md) — Architect/Coder/Scribe roles, communication files, Scribe's cleanup protocol
-- [Modules table seed requirement](project_modules_seed.md) — `modules` table must be seeded after DB reset; absence causes silent 404 on `POST /api/user/settings`
+- [Modules table seed requirement](project_modules_seed.md) — `modules` + `location_types` must be seeded after DB reset (mountains + castles); use `pnpm tsx lib/db/seed.ts`
+- [Castles sync workflow and unified clustering](project_castles_sync_and_clustering.md) — reads data/castles.geojson (file, not live Overpass); CastlesScraperService deleted; file not yet committed (v22 blocker)
+- [DO App Platform deployment and admin role](project_do_deploy_and_admin.md) — lazy DB init, SSL config, custom migrations, DB-backed admin role, no Playwright on server, admin credentials in DB

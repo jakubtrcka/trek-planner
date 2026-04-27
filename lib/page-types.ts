@@ -11,3 +11,11 @@ export type MapBounds = {
   north: number;
   east: number;
 };
+
+import type { MapPoint } from "./peaks/types";
+import type { CastlePoint } from "./castles/types";
+
+export type ActiveDetail =
+  | { type: "peak"; data: MapPoint }
+  | { type: "castle"; data: CastlePoint }
+  | { type: null; data: null };

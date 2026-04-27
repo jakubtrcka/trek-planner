@@ -1,11 +1,17 @@
 ---
 name: Admin Role Check Pattern
-description: How admin access is implemented in Trek Planner — DB schema has no role field, so ADMIN_EMAILS env var is used
+description: How admin access is implemented in Trek Planner — DB-backed role column, isAdmin() helper, useIsAdmin SWR hook
 type: project
 ---
 
-Admin access (v8.6) is controlled via `ADMIN_EMAILS` env variable (comma-separated email list), NOT via a DB role field.
+Admin access is DB-backed since v16a (2026-04-24). `ADMIN_EMAILS` env var was REMOVED.
 
-**Why:** The `users` table in `lib/db/schema.ts` has no `role` column, and the Better Auth admin plugin is not configured. Adding a DB migration was out of scope for 8.6.
+**Current implementation:**
+- `users.role` column (`user` | `admin`) in DB schema via `lib/db/schema.ts`
+- `lib/db/admin.ts` — `isAdmin(userId: string): Promise<boolean>` — server-side check
+- `hooks/useIsAdmin.ts` — SWR hook (`GET /api/auth/is-admin`) — client-side check
+- Admin routes: `await isAdmin(session.user.id)` — returns 403 if not admin
+- UI: `!!session && isAdmin` from `useIsAdmin()` hook guards admin links
 
-**How to apply:** When implementing admin-gated features, check `session.user.email` against `ADMIN_EMAILS`. If a role-based system is needed in the future, the DB schema must be migrated first (add `role` column to `users` table) and Better Auth admin plugin configured in `lib/auth.ts`.
+**Why:** ADMIN_EMAILS env was fragile and environment-coupled. DB-backed role is more robust.
+**How to apply:** For admin-gated API routes, use `isAdmin(session.user.id)` from `lib/db/admin.ts`. For admin-gated UI, use `useIsAdmin()` hook.

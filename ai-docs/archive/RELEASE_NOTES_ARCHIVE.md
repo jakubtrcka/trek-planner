@@ -1,4 +1,68 @@
 
+## v16-deploy + v16b-bugfix + v16c-admin-credentials + v16d-playwright-fix + v16e-static-data-files — DO App Platform deploy stabilizace + lokální scraping (přesunuto z RELEASE_NOTES.md 2026-04-27)
+
+> Datum: 2026-04-27 | Branch: main | Autor: Claude Sonnet 4.6
+
+### Status: ✅ (v16d zavřeno jako neřešitelné — nahrazeno v16e)
+
+#### v16e — Lokální scraping do statických souborů
+
+| Soubor | Operace | Popis |
+|---|---|---|
+| `scripts/scrape-peaks.ts` | CREATE | Lokální Playwright scraper → `data/peaks.json` |
+| `scripts/scrape-areas.ts` | CREATE | Lokální Playwright scraper → `data/areas.json` |
+| `app/api/sync-peaks/route.ts` | REWRITE | Čte z `data/peaks.json`, žádný Playwright na serveru |
+| `app/api/sync-areas/route.ts` | REWRITE | Čte z `data/areas.json`, žádný Playwright na serveru |
+| `package.json` | UPDATE | Skripty `scrape:peaks` a `scrape:areas` |
+
+Workflow: Lokálně `pnpm scrape:peaks` → `data/peaks.json` → commit & push → Admin panel "Sync Vrcholy" → DB.
+
+#### v16d — Playwright na DO App Platform (zavřeno bez řešení)
+
+DO App Platform buildpack odděluje build a runtime prostředí — browser nainstalovaný v build fázi nebyl dostupný při runtime. 4 pokusy selhaly. Finální závěr: Playwright na DO s buildpack architekturou není spolehlivě řešitelný bez Dockerfile deploy. Řešení: přesunout scraping lokálně → statické soubory (v16e).
+
+#### v16c — Globální admin credentials Hory.app v DB
+
+| Soubor | Operace | Popis |
+|---|---|---|
+| `app/api/admin/hory-credentials/route.ts` | CREATE | GET/POST — credentials do `data_sources.config` (šifrovaně) |
+| `lib/hory-auth.ts` | REWRITE | `getAdminHoryCredentials()` async z DB |
+| `components/AdminPanel.tsx` | UPDATE | `HoryCredentialsForm` formulář |
+
+#### v16b-bugfix — Produkční opravy
+
+| Soubor | Operace | Popis |
+|---|---|---|
+| `lib/db/locations-repository.ts` | UPDATE | `getLocationsByModuleAndCountry()` s JOIN na `location_types` |
+| `app/api/peaks/route.ts` | UPDATE | Filtruje přes modul mountains |
+| `app/api/sync-peaks/route.ts` | UPDATE | Fire-and-forget 202, Playwright na pozadí |
+| `components/AdminPanel.tsx` | UPDATE | Polling `/api/peaks` každých 10s |
+| `app/page.tsx` | UPDATE | Clear `selectedCastle` při přepnutí modulu |
+| `hooks/useMapEffects.ts` | UPDATE | `activeModule` v deps clusterovacího efektu |
+
+Opravené problémy: (10) Zámky zobrazeny v modulu Hory — `getAllLocations()` bez filtrování modulu. (11) 504 Gateway Timeout na sync vrcholů. (12) `selectedCastle` stale state přežívající přepnutí modulu.
+
+#### v16-deploy — DO App Platform deploy stabilizace
+
+| Soubor | Operace | Popis |
+|---|---|---|
+| `lib/db/index.ts` | UPDATE | Strip `sslmode` + `rejectUnauthorized: false` + `dotenv.config()` |
+| `lib/db/lazy-init.ts` | CREATE | Singleton `ensureDbInitialized()` |
+| `lib/db/admin.ts` | CREATE | `isAdmin(userId)` — dotaz do DB |
+| `lib/db/schema.ts` | UPDATE | `role varchar(32) DEFAULT 'user'` v tabulce `user` |
+| `lib/auth.ts` | UPDATE | `baseURL` a `secret` z env vars |
+| `lib/auth-client.ts` | UPDATE | Odstraněn `baseURL` (inferuje z `window.location.origin`) |
+| `scripts/db-migrate.ts` | CREATE | Vlastní migrace — trackuje v `public._migrations` |
+| `drizzle/0000_nosy_raider.sql` | CREATE | Čerstvá migrace — 17 tabulek |
+| `drizzle/0001_left_living_lightning.sql` | CREATE | `ALTER TABLE user ADD COLUMN role` |
+| `providers/castles/CastlesScraperService.ts` | DELETE | Mrtvý kód |
+
+Opravené problémy: (1) ENOTFOUND base — DO private network DNS. (2) SSL SELF_SIGNED_CERT. (3) SASL dotenv hoisting. (4) Staré migrace. (5–6) BetterAuth baseURL. (7) Overpass API 406/429. (8) Permission denied drizzle. (9) Admin role DB-backed.
+
+**Technical Audit:** `pnpm tsc --noEmit` ✅ čisté (všechny sub-verze).
+
+---
+
 ## v15 + v15a + v15b + v15c + v15d — Live Overpass sync, unified clustering, collapsible filter, floating chat, UI opravy (přesunuto z RELEASE_NOTES.md 2026-04-23)
 
 > Datum: 2026-04-23 | Branch: main | Verze: v15, v15a, v15b, v15c, v15d
@@ -119,10 +183,6 @@
 - `GET /api/auth/is-admin` + `hooks/useIsAdmin.ts`: Settings ikona viditelná pouze pro `!!session && isAdmin`.
 - Clustering: `maxZoom` 14→10, `minPoints` 2→4, `radius` 60→55px.
 
-**Odchylky:**
-- `useCastles` jako samostatný SWR hook (místo rozšiřování `useDataFetching.ts` na 229 ř.) — architektonicky čistější.
-- V iteraci v13 byl `CastleDetail` renderován jako overlay; v14 přepracován jako integrovaný detail v `CastlesSidebar`. v14 je definitivní architektura.
-
 ---
 
 ## v12 — Trips UX: RoutesSidebar verifikace + Odebrání waypointu + Řazení waypointů (plný záznam — přesunuto z RELEASE_NOTES.md 2026-04-22)
@@ -174,32 +234,4 @@
 
 ---
 
-## v10 — Rozšíření AI plánovače tras (plný záznam — přesunuto z RELEASE_NOTES.md 2026-04-22)
-
-> Datum: 2026-04-22 | Branch: main | Verze: v10.1 + v10.3 + v10.2
-
-### Status: ✅ Success
-
-| Soubor | Operace | Řádky (wc -l) | Limit |
-|---|---|---|---|
-| `hooks/useTripLayer.ts` | CREATE | 57 | 60 |
-| `lib/db/trips-repository.ts` | MODIFY | 52 | 60 |
-| `app/api/trips/[id]/route.ts` | CREATE | 30 | 40 |
-| `app/api/trips/[id]/export/route.ts` | CREATE | 42 | 40+2 |
-| `hooks/useTrips.ts` | MODIFY | 33 | — |
-| `components/TripPanel.tsx` | MODIFY | 91 | — |
-| `app/page.tsx` | MODIFY | ~245 | — |
-
-**Technical Audit:** `pnpm tsc --noEmit` 0 chyb. `pnpm build` ✅.
-
-**v10.1 — Vizualizace trasy:** `hooks/useTripLayer.ts` — polyline (oranžová, dasharray) + circle markery. Klik → `setSelectedPeak()`.
-
-**v10.3 — Přejmenování výletu:** `updateTrip`, `getTripById`. `PATCH /api/trips/[id]` — ownership check. Inline edit (dvojklik → Input, blur/Enter/Escape).
-
-**v10.2 — GPX export:** `GET /api/trips/[id]/export` — string interpolace, `escapeXml()`, `<a download>`.
-
-**Odchylky:** `export/route.ts` 42 ř. (limit 40) — escapeXml helper nutný.
-
----
-
-> Starší verze (V1–V26a, TD-cleanup, v8.5, v8.6, v8.6.1, v8.7, TD-build, v9.1–v9.7, TD-orphan, TD-schema-uc, Fáze 9.4) jsou trvale archivovány. Archiv udržuje pouze posledních 5 verzí.
+> Starší verze (V1–V26a, TD-cleanup, v8.5, v8.6, v8.6.1, v8.7, TD-build, v9.1–v9.7, TD-orphan, TD-schema-uc, Fáze 9.4, v10) jsou trvale archivovány. Archiv udržuje pouze posledních 5 verzí.

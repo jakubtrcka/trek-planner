@@ -74,7 +74,10 @@ async function main() {
   try {
     response = await fetch(OVERPASS_API, {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": "hory-trek-planner/1.0",
+      },
       body: `data=${encodeURIComponent(QUERY)}`,
       signal: controller.signal,
     });
