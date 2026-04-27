@@ -10,6 +10,7 @@
     "inspect:map": "node scripts/inspect-map.mjs",
     "scrape:peaks": "tsx scripts/scrape-peaks.ts",
     "scrape:areas": "tsx scripts/scrape-areas.ts",
+    "scrape:castles": "tsx scripts/scrape-castles.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/db-migrate.ts",
     "db:studio": "drizzle-kit studio"

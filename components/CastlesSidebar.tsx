@@ -1,8 +1,10 @@
 "use client";
 
+import { useCallback } from "react";
 import { Search } from "lucide-react";
 import { Input } from "./ui/input";
 import { cn } from "../lib/utils";
+import { useModuleSidebar } from "../hooks/useModuleSidebar";
 import type { CastlePoint } from "../lib/castles/types";
 
 type VisitEntry = { locationId: string; count: number; visitedAt: string };
@@ -14,6 +16,7 @@ interface CastlesSidebarProps {
   searchQuery: string;
   selectedCastle: CastlePoint | null;
   filterByMapBounds: boolean;
+  showFilter: boolean;
   onSearchChange: (q: string) => void;
   onCastleSelect: (castle: CastlePoint | null) => void;
   onFilterByMapBoundsChange: (v: boolean) => void;
@@ -21,20 +24,21 @@ interface CastlesSidebarProps {
 
 export function CastlesSidebar({
   castles, allCastlesCount, userVisits, searchQuery, selectedCastle,
-  filterByMapBounds, onSearchChange, onCastleSelect, onFilterByMapBoundsChange,
+  filterByMapBounds, showFilter, onSearchChange, onCastleSelect, onFilterByMapBoundsChange,
 }: CastlesSidebarProps) {
-  const filtered = searchQuery.trim()
-    ? castles.filter((c) => (c.name ?? "").toLowerCase().includes(searchQuery.trim().toLowerCase()))
-    : castles;
+  const getCastleName = useCallback((c: CastlePoint) => c.name ?? "", []);
+  const { filtered } = useModuleSidebar({ items: castles, searchQuery, getSearchText: getCastleName });
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <label className="flex cursor-pointer select-none items-center gap-2 text-sm text-zinc-500">
-          <input type="checkbox" checked={filterByMapBounds} onChange={(e) => onFilterByMapBoundsChange(e.target.checked)} className="h-4 w-4 rounded border-zinc-300" />
-          Filtrovat podle mapy
-        </label>
-      </div>
+      {showFilter && (
+        <div className="flex items-center justify-between gap-2">
+          <label className="flex cursor-pointer select-none items-center gap-2 text-sm text-zinc-500">
+            <input type="checkbox" checked={filterByMapBounds} onChange={(e) => onFilterByMapBoundsChange(e.target.checked)} className="h-4 w-4 rounded border-zinc-300" />
+            Filtrovat podle mapy
+          </label>
+        </div>
+      )}
       <div className="space-y-2 px-1">
         <div className="flex items-center justify-between px-0.5">
           <span className="text-xs font-medium text-zinc-500">Zámky</span>

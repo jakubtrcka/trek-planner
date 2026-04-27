@@ -44,7 +44,8 @@ export default function HomePage() {
 
   // ─── Navigation & UI state ───────────────────────────────────────────────
   const [activeSection, setActiveSection] = useState<SectionKey>("peaks");
-  const [activeModule, setActiveModule] = useState<"hory" | "routes" | "trips" | "zamky">("hory");
+  const [activeModule, setActiveModule] = useState<"hory" | "planovani" | "zamky">("hory");
+  const [planningTab, setPlanningTab] = useState<"trips" | "routes">("trips");
   const [castleSearchQuery, setCastleSearchQuery] = useState("");
   const [isModulePanelOpen, setIsModulePanelOpen] = useState(true);
   const [selectedPeak, setSelectedPeak] = useState<MapPoint | null>(null);
@@ -88,6 +89,7 @@ export default function HomePage() {
     localStorage.setItem("hory-area-filter", JSON.stringify(selectedAreaSlugs));
   }, [selectedAreaSlugs]);
   const [showPeakFilter, setShowPeakFilter] = useState(false);
+  const [showCastleFilter, setShowCastleFilter] = useState(false);
   const [challengeSort, setChallengeSort] = useState<"default" | "alpha" | "completion">("default");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [activeTripId, setActiveTripId] = useState<number | null>(null);
@@ -153,7 +155,9 @@ export default function HomePage() {
     ? false
     : activeModule === "zamky"
     ? true
-    : showCastlesLayer;
+    : activeModule === "planovani"
+    ? showCastlesLayer
+    : false;
 
   function pointColorByName(name: string): string { const first = name.trim()[0]?.toUpperCase() ?? null; if (!first) return "#6f7f89"; return selectedLetterColorMap.get(normalizeLetter(first)) ?? "#6f7f89"; }
 
@@ -235,13 +239,15 @@ export default function HomePage() {
   }
 
   // ─── Visit check-in ───────────────────────────────────────────────────────
-  async function handleVisitChange(externalId: string, action: "add" | "remove") {
+  async function handleVisitChange(externalId: string, action: "add" | "remove", kind: "peak" | "castle" = "peak") {
     if (action === "add") {
       await fetch("/api/user-visits", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ locationId: externalId }) });
     } else {
       await fetch(`/api/user-visits/${encodeURIComponent(externalId)}`, { method: "DELETE" });
     }
-    await Promise.all([mutateAscents(), mutateVisits()]);
+    const mutations: Promise<unknown>[] = [mutateVisits()];
+    if (kind === "peak") mutations.push(mutateAscents());
+    await Promise.all(mutations);
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────
@@ -269,9 +275,7 @@ export default function HomePage() {
               </button>
             </div>
             <div className="flex flex-1 flex-col items-center gap-2 py-3">
-              {([["routes", <Route key="r" className="h-5 w-5" />, "Plánování tras"], ["trips", <MapPinned key="t" className="h-5 w-5" />, "Výlety"]] as [string, React.ReactNode, string][]).map(([key, icon, title]) => (
-                <button key={key} type="button" title={title} onClick={() => { setActiveModule(key as typeof activeModule); setIsModulePanelOpen(true); }} className={cn("flex h-11 w-11 items-center justify-center rounded-2xl border transition", activeModule === key ? "border-zinc-900 bg-zinc-950 text-white" : "border-transparent text-zinc-500 hover:border-zinc-200 hover:bg-zinc-50 hover:text-zinc-900")}>{icon}</button>
-              ))}
+              <button type="button" title="Plánování" onClick={() => { setActiveModule("planovani"); setIsModulePanelOpen(true); }} className={cn("flex h-11 w-11 items-center justify-center rounded-2xl border transition", activeModule === "planovani" ? "border-zinc-900 bg-zinc-950 text-white" : "border-transparent text-zinc-500 hover:border-zinc-200 hover:bg-zinc-50 hover:text-zinc-900")}><MapPinned className="h-5 w-5" /></button>
               <div className="my-1 h-px w-6 bg-zinc-200" />
               <button type="button" title="Hory" onClick={() => { setActiveModule("hory"); setIsModulePanelOpen(true); }} className={cn("flex h-11 w-11 items-center justify-center rounded-2xl border transition", activeModule === "hory" ? "border-zinc-900 bg-zinc-950 text-white" : "border-transparent text-zinc-500 hover:border-zinc-200 hover:bg-zinc-50 hover:text-zinc-900")}><Mountain className="h-5 w-5" /></button>
               <button type="button" title="Zámky" onClick={() => { setActiveModule("zamky"); setIsModulePanelOpen(true); }} className={cn("flex h-11 w-11 items-center justify-center rounded-2xl border transition", activeModule === "zamky" ? "border-zinc-900 bg-zinc-950 text-white" : "border-transparent text-zinc-500 hover:border-zinc-200 hover:bg-zinc-50 hover:text-zinc-900")}><Castle className="h-5 w-5" /></button>
@@ -283,16 +287,37 @@ export default function HomePage() {
           <div className={cn("flex h-full flex-col bg-white transition-[width] duration-200 ease-out", isModulePanelOpen ? "w-[300px] border-r border-zinc-200" : "w-0")}>
             <div className={cn("flex h-full flex-col", !isModulePanelOpen && "invisible")}>
               <div className="flex shrink-0 items-center justify-between border-b border-zinc-200 px-4 py-4">
-                <div><p className="text-xs font-medium uppercase tracking-[0.2em] text-zinc-400">{activeModule === "hory" || activeModule === "zamky" ? "Modul" : "Nástroj"}</p><p className="text-sm font-semibold text-zinc-900">{activeModule === "routes" ? "Plánování tras" : activeModule === "trips" ? "Výlety" : activeModule === "zamky" ? "Zámky" : "Hory"}</p></div>
+                <div><p className="text-xs font-medium uppercase tracking-[0.2em] text-zinc-400">{activeModule === "planovani" ? "Nástroj" : "Modul"}</p><p className="text-sm font-semibold text-zinc-900">{activeModule === "planovani" ? "Plánování" : activeModule === "zamky" ? "Zámky" : "Hory"}</p></div>
               </div>
               <div className="flex min-h-0 flex-1 flex-col border-t border-zinc-200">
-                {activeModule === "trips" && <ScrollArea className="flex-1"><div className="px-4 py-4 space-y-4">{activeTripId !== null && <p className="text-xs text-zinc-500">Kliknutím na vrchol ho přidáš do výletu.</p>}{waypointStatus && <p className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-700">{waypointStatus}</p>}<TripPanel activeTripId={activeTripId} onActiveTripChange={setActiveTripId} onTripDelete={() => setActiveTripId(null)} onWaypointDelete={handleWaypointDelete} onWaypointReorder={handleWaypointReorder} /></div></ScrollArea>}
-                {activeModule === "routes" && <ScrollArea className="flex-1"><div className="px-4 py-4 space-y-6">{fetch$.statusMessage && <div className="rounded-2xl border border-red-200 bg-red-50/70 p-3 text-sm text-zinc-700">{fetch$.statusMessage}</div>}<RoutesSidebar aiPrompt={fetch$.aiPrompt} aiLoading={fetch$.aiLoading} aiIntent={fetch$.aiIntent} aiParser={fetch$.aiParser} routePlanningLoading={fetch$.routePlanningLoading} maxDistance={fetch$.maxDistance} routeMode={fetch$.routeMode} onAiPromptChange={fetch$.setAiPrompt} onAiSubmit={(e) => void fetch$.handleAiPlanningSubmit(e, visiblePoints)} onRoutePlanningSubmit={(e) => void fetch$.handleRoutePlanningSubmit(e, visiblePoints)} onMaxDistanceChange={fetch$.setMaxDistance} onRouteModeChange={fetch$.setRouteMode} />{fetch$.routePlans.length > 0 && <div className="space-y-3">{fetch$.routePlans.map((route: PlannedRoute) => <div key={route.id} className="rounded-3xl border border-zinc-200 bg-zinc-50/70 p-5 space-y-2"><p className="font-semibold text-zinc-950">{route.title}</p><p className="text-sm text-zinc-500">{route.distanceKm.toFixed(1)} km • {Math.round(route.durationMinutes / 60)} h {route.durationMinutes % 60} min • {route.ascentMeters} m</p><p className="text-sm text-zinc-600">{ensureArray<{ name: string }>(route.peaks).map((p) => p.name).join(", ")}</p><a href={route.mapyCzUrl} target="_blank" rel="noreferrer" className="inline-flex rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-100">Otevřít na Mapy.cz</a></div>)}<Badge variant="outline" className="rounded-full">{fetch$.routePlans.length} tras {fetch$.routeInfo ? `— ${fetch$.routeInfo}` : ""}</Badge></div>}</div></ScrollArea>}
-                {activeModule === "zamky" && <ScrollArea className="flex-1"><div className="px-4 py-4">{selectedCastle ? <CastleDetail castle={selectedCastle} userVisits={userVisits} isLoggedIn={!!session} onVisitChange={handleVisitChange} onBack={() => setSelectedCastle(null)} /> : <CastlesSidebar castles={visibleCastles} allCastlesCount={castles.length} userVisits={userVisits} searchQuery={castleSearchQuery} selectedCastle={selectedCastle} filterByMapBounds={filterCastlesByMapBounds} onSearchChange={setCastleSearchQuery} onCastleSelect={setSelectedCastle} onFilterByMapBoundsChange={setFilterCastlesByMapBounds} />}</div></ScrollArea>}
+                {activeModule === "planovani" && <>
+                  <div className="flex shrink-0 items-center gap-1 border-b border-zinc-200 px-3 py-2">
+                    {(["trips", "routes"] as ("trips" | "routes")[]).map((tab) => (
+                      <button key={tab} type="button" onClick={() => setPlanningTab(tab)} className={cn("flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition", planningTab === tab ? "bg-zinc-100 text-zinc-950" : "text-zinc-400 hover:text-zinc-700")}>
+                        {tab === "trips" ? <MapPinned className="h-4 w-4" /> : <Route className="h-4 w-4" />}
+                        {tab === "trips" ? "Výlety" : "Trasy"}
+                      </button>
+                    ))}
+                  </div>
+                  {planningTab === "trips" && <ScrollArea className="flex-1"><div className="px-4 py-4 space-y-4">{activeTripId !== null && <p className="text-xs text-zinc-500">Kliknutím na vrchol ho přidáš do výletu.</p>}{waypointStatus && <p className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-700">{waypointStatus}</p>}<TripPanel activeTripId={activeTripId} onActiveTripChange={setActiveTripId} onTripDelete={() => setActiveTripId(null)} onWaypointDelete={handleWaypointDelete} onWaypointReorder={handleWaypointReorder} /></div></ScrollArea>}
+                  {planningTab === "routes" && <ScrollArea className="flex-1"><div className="px-4 py-4 space-y-6">{fetch$.statusMessage && <div className="rounded-2xl border border-red-200 bg-red-50/70 p-3 text-sm text-zinc-700">{fetch$.statusMessage}</div>}<RoutesSidebar aiPrompt={fetch$.aiPrompt} aiLoading={fetch$.aiLoading} aiIntent={fetch$.aiIntent} aiParser={fetch$.aiParser} routePlanningLoading={fetch$.routePlanningLoading} maxDistance={fetch$.maxDistance} routeMode={fetch$.routeMode} onAiPromptChange={fetch$.setAiPrompt} onAiSubmit={(e) => void fetch$.handleAiPlanningSubmit(e, visiblePoints)} onRoutePlanningSubmit={(e) => void fetch$.handleRoutePlanningSubmit(e, visiblePoints)} onMaxDistanceChange={fetch$.setMaxDistance} onRouteModeChange={fetch$.setRouteMode} />{fetch$.routePlans.length > 0 && <div className="space-y-3">{fetch$.routePlans.map((route: PlannedRoute) => <div key={route.id} className="rounded-3xl border border-zinc-200 bg-zinc-50/70 p-5 space-y-2"><p className="font-semibold text-zinc-950">{route.title}</p><p className="text-sm text-zinc-500">{route.distanceKm.toFixed(1)} km • {Math.round(route.durationMinutes / 60)} h {route.durationMinutes % 60} min • {route.ascentMeters} m</p><p className="text-sm text-zinc-600">{ensureArray<{ name: string }>(route.peaks).map((p) => p.name).join(", ")}</p><a href={route.mapyCzUrl} target="_blank" rel="noreferrer" className="inline-flex rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-100">Otevřít na Mapy.cz</a></div>)}<Badge variant="outline" className="rounded-full">{fetch$.routePlans.length} tras {fetch$.routeInfo ? `— ${fetch$.routeInfo}` : ""}</Badge></div>}</div></ScrollArea>}
+                </>}
+                {activeModule === "zamky" && <>
+                  <div className="flex shrink-0 items-center gap-1 border-b border-zinc-200 px-3 py-2">
+                    <span className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium text-zinc-950"><Castle className="h-4 w-4" />Zámky</span>
+                    <button type="button" title="Filtry" onClick={() => setShowCastleFilter((v) => !v)} className={cn("relative ml-auto flex h-8 w-8 items-center justify-center rounded-xl border transition", showCastleFilter ? "border-zinc-800 bg-zinc-800 text-white" : "border-zinc-200 text-zinc-400 hover:border-zinc-300 hover:text-zinc-700")}>
+                      <SlidersHorizontal className="h-3.5 w-3.5" />
+                      {!filterCastlesByMapBounds && <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-[9px] font-bold text-white">1</span>}
+                    </button>
+                  </div>
+                  <ScrollArea className="flex-1"><div className="px-4 py-4">
+                    <CastlesSidebar castles={visibleCastles} allCastlesCount={castles.length} userVisits={userVisits} searchQuery={castleSearchQuery} selectedCastle={selectedCastle} filterByMapBounds={filterCastlesByMapBounds} showFilter={showCastleFilter} onSearchChange={setCastleSearchQuery} onCastleSelect={setSelectedCastle} onFilterByMapBoundsChange={setFilterCastlesByMapBounds} />
+                  </div></ScrollArea>
+                </>}
                 {activeModule === "hory" && <>
                   <div className="flex shrink-0 items-center gap-1 border-b border-zinc-200 px-3 py-2">
                     {(["peaks", "challenges"] as SectionKey[]).map((key) => <button key={key} type="button" onClick={() => setActiveSection(key)} className={cn("flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition", activeSection === key ? "bg-zinc-100 text-zinc-950" : "text-zinc-400 hover:text-zinc-700")}>{key === "peaks" ? <Mountain className="h-4 w-4" /> : null}{key === "peaks" ? "Vrcholy" : "Výzvy"}</button>)}
-                    {activeSection === "peaks" && !selectedPeak && (
+                    {activeSection === "peaks" && (
                       <button type="button" title="Filtry" onClick={() => setShowPeakFilter((v) => !v)} className={cn("relative ml-auto flex h-8 w-8 items-center justify-center rounded-xl border transition", showPeakFilter ? "border-zinc-800 bg-zinc-800 text-white" : "border-zinc-200 text-zinc-400 hover:border-zinc-300 hover:text-zinc-700")}>
                         <SlidersHorizontal className="h-3.5 w-3.5" />
                         {activeFilterCount > 0 && <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-[9px] font-bold text-white">{activeFilterCount}</span>}
@@ -302,7 +327,6 @@ export default function HomePage() {
                   <ScrollArea className="flex-1"><div className="px-4 py-4">
                     {fetch$.statusMessage && <div className="mb-4 rounded-2xl border border-red-200 bg-red-50/70 p-3 text-sm text-zinc-700">{fetch$.statusMessage}</div>}
                     {activeSection === "challenges" ? <ChallengesContent allChallenges={allChallenges} challengeSort={challengeSort} categoryFilter={categoryFilter} selectedChallengeId={selectedChallengeId} expandedChallengeId={expandedChallengeId} challengeCompletionMap={challengeCompletionMap} userAscents={userAscents} peakById={peakById} completedChallengeIds={completedChallengeIds} onChallengeSortChange={setChallengeSort} onCategoryFilterChange={setCategoryFilter} onChallengeSelect={setSelectedChallengeId} onExpandedChallengeChange={setExpandedChallengeId} getChallengeYear={getChallengeYear} computePeakIds={computePeakIds} />
-                    : selectedPeak ? <PeakDetail peak={selectedPeak} userAscents={userAscents} userVisits={userVisits} peakChallengesMap={peakChallengesMap} getPeakId={(link) => { const m = /\/mountain\/(\d+)-/.exec(link ?? ""); return m ? Number(m[1]) : null; }} isLoggedIn={!!session} onVisitChange={handleVisitChange} onBack={() => setSelectedPeak(null)} />
                     : <div className="space-y-4">
                         {showPeakFilter && (
                           <div className="space-y-1 rounded-2xl border border-zinc-100 bg-zinc-50 p-3">
@@ -325,9 +349,14 @@ export default function HomePage() {
         </aside>
         <div className="relative min-w-0 flex-1 overflow-hidden isolate">
           <MapContainer containerRef={areaSelectMapContainerRef} />
-          {selectedCastle && activeModule !== "zamky" && (
-            <div className="absolute top-4 right-4 z-[900] w-80">
-              <CastleDetail castle={selectedCastle} userVisits={userVisits} isLoggedIn={!!session} onVisitChange={handleVisitChange} onBack={() => setSelectedCastle(null)} />
+          {selectedPeak && (
+            <div className="absolute bottom-4 left-4 z-[900] w-80 max-h-[calc(100vh-6rem)] overflow-y-auto">
+              <PeakDetail peak={selectedPeak} userAscents={userAscents} userVisits={userVisits} peakChallengesMap={peakChallengesMap} getPeakId={(link) => { const m = /\/mountain\/(\d+)-/.exec(link ?? ""); return m ? Number(m[1]) : null; }} isLoggedIn={!!session} onVisitChange={handleVisitChange} onBack={() => setSelectedPeak(null)} />
+            </div>
+          )}
+          {selectedCastle && (
+            <div className="absolute top-4 right-4 z-[900] w-80 max-h-[calc(100vh-6rem)] overflow-y-auto">
+              <CastleDetail castle={selectedCastle} userVisits={userVisits} isLoggedIn={!!session} onVisitChange={(id, action) => handleVisitChange(id, action, "castle")} onBack={() => setSelectedCastle(null)} />
             </div>
           )}
           <ChatPanel messages={messages} input={input} isLoading={chatLoading} onInputChange={handleInputChange} onSubmit={handleSubmit} />

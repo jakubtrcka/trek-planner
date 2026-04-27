@@ -63,11 +63,18 @@ function resolveCoordinates(geometry: z.infer<typeof GeometrySchema>): { lat: nu
   return computePolygonCentroid(ring);
 }
 
+const GEOJSON_CANDIDATES = [
+  path.resolve(process.cwd(), "data", "castles.geojson"),
+  path.resolve(process.cwd(), "export.geojson"),
+];
+
 export class CastlesParserService {
   private readonly geojsonPath: string;
 
   constructor(geojsonPath?: string) {
-    this.geojsonPath = geojsonPath ?? path.resolve(process.cwd(), "export.geojson");
+    this.geojsonPath = geojsonPath
+      ?? GEOJSON_CANDIDATES.find((p) => fs.existsSync(p))
+      ?? GEOJSON_CANDIDATES[0];
   }
 
   parse(): CastleLocation[] {

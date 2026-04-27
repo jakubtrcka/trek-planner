@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useState } from "react";
 import type { MapPoint, AscentsMapEntry } from "../lib/page-types";
 
@@ -38,13 +39,10 @@ export function PeakDetail({ peak, userAscents, userVisits, peakChallengesMap, g
 
   return (
     <div className="rounded-[1.5rem] border border-zinc-200 bg-white shadow-sm">
-      <div className="flex shrink-0 items-center gap-2 border-b border-zinc-100 px-4 py-3">
-        <button type="button" onClick={onBack}
-          className="flex items-center gap-1.5 rounded-xl border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-500 transition hover:bg-zinc-50 hover:text-zinc-950">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M8 2L4 6l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          Zpět na seznam
+      <div className="flex shrink-0 items-center justify-end border-b border-zinc-100 px-4 py-3">
+        <button type="button" onClick={onBack} title="Zavřít"
+          className="flex h-7 w-7 items-center justify-center rounded-lg border border-zinc-200 text-zinc-400 transition hover:bg-zinc-50 hover:text-zinc-950">
+          <X className="h-3.5 w-3.5" />
         </button>
       </div>
 
