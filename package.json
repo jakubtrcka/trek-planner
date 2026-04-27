@@ -8,6 +8,8 @@
     "start": "pnpm exec playwright install chromium && next start",
     "lint": "next lint",
     "inspect:map": "node scripts/inspect-map.mjs",
+    "scrape:peaks": "tsx scripts/scrape-peaks.ts",
+    "scrape:areas": "tsx scripts/scrape-areas.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/db-migrate.ts",
     "db:studio": "drizzle-kit studio"

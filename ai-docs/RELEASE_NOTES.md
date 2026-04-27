@@ -1,6 +1,67 @@
 # RELEASE_NOTES — [[ai-docs/CODER|Coder]] výstup pro [[ai-docs/ARCHITECT|Architekta]]
-> Datum: 2026-04-24 | Branch: main | Autor: Claude Sonnet 4.6 (claude-sonnet-4-6)
-> Verze: v16-deploy + v16b-bugfix + v16c-admin-credentials
+> Datum: 2026-04-27 | Branch: main | Autor: Claude Sonnet 4.6 (claude-sonnet-4-6)
+> Verze: v16-deploy + v16b-bugfix + v16c-admin-credentials + v16d-playwright-fix + v16e-static-data-files
+
+---
+
+## v16e-static-data-files — Lokální scraping do statických souborů, sync z disku
+
+### Status: ✅
+
+### Files Changed
+
+| Soubor | Operace | Popis |
+|---|---|---|
+| `scripts/scrape-peaks.ts` | CREATE | Lokální Playwright scraper → `data/peaks.json` |
+| `scripts/scrape-areas.ts` | CREATE | Lokální Playwright scraper → `data/areas.json` |
+| `app/api/sync-peaks/route.ts` | REWRITE | Čte z `data/peaks.json`, upsertuje do DB — žádný Playwright na serveru |
+| `app/api/sync-areas/route.ts` | REWRITE | Čte z `data/areas.json`, upsertuje do DB — žádný Playwright na serveru |
+| `package.json` | UPDATE | Přidány skripty `scrape:peaks` a `scrape:areas` |
+
+### Architektura
+
+**Dřív:** Admin panel → `/api/sync-peaks` → Playwright scraper na serveru → DB
+
+**Nyní:**
+```
+Lokálně:   pnpm scrape:peaks  →  data/peaks.json  →  git commit & push
+Produkce:  Admin panel → /api/sync-peaks → čte data/peaks.json → DB
+```
+
+Stejný princip jako `export.geojson` u zámků — statický soubor v repozitáři, server jen importuje.
+
+### Workflow pro správce dat
+
+1. Lokálně nastav `HORY_USERNAME` a `HORY_PASSWORD` v `.env.local`
+2. Spusť `pnpm scrape:peaks` (trvá 5–15 min, Playwright crawluje hory.app)
+3. Commitni `data/peaks.json` a pushnout
+4. V Admin panelu klikni **Sync Vrcholy** — rychlý import z JSON do DB
+
+### Technical Audit
+
+- **pnpm tsc --noEmit:** ✅ čisté
+
+---
+
+## v16d-playwright-fix — Neúspěšné pokusy o Playwright na DO App Platform
+
+### Status: ⚠️ Zavřeno bez řešení — nahrazeno v16e
+
+### Problémy a pokusy
+
+#### 14. Playwright browser binary chybí na DO runtime
+
+DO App Platform buildpack (heroku/nodejs) odděluje build a runtime prostředí. Browser nainstalovaný v build fázi do `/workspace/.cache/ms-playwright/` nebyl dostupný při runtime.
+
+**Pokus 1:** `pnpm exec playwright install --with-deps chromium` v build skriptu → selhalo (`sudo` nedostupný na DO buildpacku).
+
+**Pokus 2:** `pnpm exec playwright install chromium` v build skriptu → browser nainstalovaný, ale `.cache/` directory není součástí runtime slug.
+
+**Pokus 3:** Přechod na Dockerfile (`dockerfile_path: Dockerfile` v app spec) → DO App Platform ignorovalo spec změnu, stále používalo buildpack.
+
+**Pokus 4:** `pnpm exec playwright install chromium && next start` ve start skriptu → stáhlo browser při každém startu kontejneru, ale DO stále ignorovalo spec s Dockerfile.
+
+**Finální závěr:** Playwright na DO App Platform s buildpack architekturou není spolehlivě řešitelný bez přechodu na Dockerfile deploy (který vyžaduje reset komponenty v DO UI nebo vlastní DO App Platform Dockerfile support). Řešení: přesunout scraping lokálně → statické soubory.
 
 ---
 

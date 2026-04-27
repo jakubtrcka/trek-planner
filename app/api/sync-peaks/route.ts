@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { HoryScraperService } from "../../../providers/hory/HoryScraperService";
+import fs from "fs";
+import path from "path";
 import { upsertLocations } from "../../../lib/db/locations-repository";
 import { linkLocationBySlug } from "../../../lib/db/areas-repository";
-import { getAdminHoryCredentials } from "../../../lib/hory-auth";
 import { isAdmin } from "../../../lib/db/admin";
 import { auth } from "../../../lib/auth";
 import { headers } from "next/headers";
@@ -14,68 +14,21 @@ import { eq } from "drizzle-orm";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-let syncRunning = false;
+const PeakSchema = z.object({
+  name: z.string(),
+  lat: z.number(),
+  lon: z.number(),
+  altitude: z.number().nullable(),
+  mountainLink: z.string().nullable(),
+  externalId: z.string().nullable(),
+  areaSlug: z.string().nullable(),
+});
 
-async function runSync(countryCode: string) {
-  const [locType] = await db
-    .select({ id: locationTypes.id, moduleId: modules.id })
-    .from(locationTypes)
-    .innerJoin(modules, eq(locationTypes.moduleId, modules.id))
-    .where(eq(modules.slug, "mountains"))
-    .limit(1);
-
-  if (!locType) throw new Error("Modul 'mountains' nebyl nalezen. Spusť seed.");
-
-  const credentials = await getAdminHoryCredentials();
-  if (!credentials.hasCredentials) throw new Error("Hory.app přihlašovací údaje nejsou nastaveny. Vyplň je v Admin panelu.");
-  const service = new HoryScraperService(credentials);
-  const { points } = await service.scrapeMapPoints({
-    targetUrl: process.env.HORY_TARGET_URL ?? "https://cs.hory.app/country/czech-republic",
-  });
-
-  const peakIdFromUrl = (url: string | null): string | null => {
-    if (!url) return null;
-    const m = url.match(/\/mountain\/(\d+)-/);
-    return m ? m[1] : null;
-  };
-
-  const slugFromSource = (source: string | undefined): string | null => {
-    if (!source) return null;
-    try {
-      const pathname = new URL(source).pathname;
-      const match = pathname.match(/^\/area\/([^/]+)/);
-      return match ? match[1] : null;
-    } catch { return null; }
-  };
-
-  const areaSlugByLatLon = new Map<string, string>();
-  const mapped = points.map((p) => {
-    const slug = slugFromSource(p.source);
-    if (slug) areaSlugByLatLon.set(`${p.lat}:${p.lon}`, slug);
-    return {
-      name: p.peakName ?? p.name ?? "Neznámý vrchol",
-      lat: p.lat,
-      lon: p.lon,
-      altitude: typeof p.altitude === "number" ? p.altitude : null,
-      externalUrl: p.mountainLink ?? null,
-      externalId: peakIdFromUrl(p.mountainLink ?? null),
-      countryCode,
-      metadata: p.mountainLink ? { mountainLink: p.mountainLink } : null,
-    };
-  });
-
-  const upserted = await upsertLocations(mapped, locType.id);
-
-  let linked = 0;
-  for (const { id, lat, lon } of upserted) {
-    const slug = areaSlugByLatLon.get(`${lat}:${lon}`);
-    if (!slug) continue;
-    await linkLocationBySlug(locType.moduleId, slug, id);
-    linked += 1;
-  }
-
-  console.log(`[sync-peaks] Hotovo: ${upserted.length} vrcholů, ${linked} propojeno.`);
-}
+const PeaksFileSchema = z.object({
+  scrapedAt: z.string(),
+  countryCode: z.string(),
+  peaks: z.array(PeakSchema),
+});
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -83,18 +36,48 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  if (syncRunning) {
-    return NextResponse.json({ status: "already_running" }, { status: 202 });
-  }
-
   const body = z.object({ countryCode: z.string().default("cz") }).parse(
     await request.json().catch(() => ({}))
   );
 
-  syncRunning = true;
-  runSync(body.countryCode)
-    .catch((err) => console.error("[sync-peaks] Chyba:", (err as Error).message))
-    .finally(() => { syncRunning = false; });
+  const dataFile = path.join(process.cwd(), "data", "peaks.json");
+  if (!fs.existsSync(dataFile)) {
+    return NextResponse.json({ error: "Soubor data/peaks.json neexistuje. Spusť lokálně: pnpm scrape:peaks" }, { status: 404 });
+  }
 
-  return NextResponse.json({ status: "started" }, { status: 202 });
+  const raw = JSON.parse(fs.readFileSync(dataFile, "utf-8")) as unknown;
+  const { peaks, countryCode, scrapedAt } = PeaksFileSchema.parse(raw);
+
+  const [locType] = await db
+    .select({ id: locationTypes.id, moduleId: modules.id })
+    .from(locationTypes)
+    .innerJoin(modules, eq(locationTypes.moduleId, modules.id))
+    .where(eq(modules.slug, "mountains"))
+    .limit(1);
+
+  if (!locType) return NextResponse.json({ error: "Modul 'mountains' nebyl nalezen. Spusť seed." }, { status: 500 });
+
+  const mapped = peaks.map((p) => ({
+    name: p.name,
+    lat: p.lat,
+    lon: p.lon,
+    altitude: p.altitude,
+    externalUrl: p.mountainLink,
+    externalId: p.externalId,
+    countryCode: body.countryCode,
+    metadata: p.mountainLink ? { mountainLink: p.mountainLink } : null,
+  }));
+
+  const upserted = await upsertLocations(mapped, locType.id);
+
+  let linked = 0;
+  for (const { id, lat, lon } of upserted) {
+    const peak = peaks.find((p) => p.lat === lat && p.lon === lon);
+    if (!peak?.areaSlug) continue;
+    await linkLocationBySlug(locType.moduleId, peak.areaSlug, id);
+    linked += 1;
+  }
+
+  console.log(`[sync-peaks] Hotovo: ${upserted.length} vrcholů, ${linked} propojeno. Soubor: ${scrapedAt}`);
+  return NextResponse.json({ ok: true, synced: upserted.length, linked, scrapedAt, total: peaks.length });
 }
