@@ -2,11 +2,14 @@
 
 Mapová aplikace pro plánování výletů s modulárním systémem lokalit (horské vrcholy, hrady a zámky, ...).
 
-## Spuštění lokálně
+## Lokální spuštění
+
+Projekt používá pnpm (verze daná polem `packageManager` v `package.json`, aktivuje ji Corepack).
 
 ```bash
-pnpm install
-pnpm dev
+corepack enable        # zpřístupní pnpm v požadované verzi
+pnpm install           # nainstaluje závislosti podle pnpm-lock.yaml
+pnpm dev               # spustí Next.js dev server (next dev)
 ```
 
 Otevři `http://localhost:3000`.
